@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cardio Pro</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  background:#050507;
+  color:white;
+  font-family:'Syne';
+  text-align:center;
+}
+
+/* HERO */
+.hero h1{
+  font-family:'Bebas Neue';
+  font-size:5rem;
+  background:linear-gradient(135deg,#00c8ff,#00ff88);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+/* BOX */
+.box{
+  margin:20px auto;
+  max-width:700px;
+  padding:20px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+/* BUTTON */
+button{
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  margin:5px;
+  background:#00ff88;
+  color:#050507;
+  font-weight:600;
+}
+
+/* SELECT */
+select{
+  padding:10px;
+  margin:5px;
+  border-radius:10px;
+}
+
+/* PLAYER */
+.player{
+  max-width:800px;
+  margin:20px auto;
+}
+
+/* DIET */
+.diet{
+  text-align:left;
+}
+
+/* TIPS */
+.tips{
+  color:#00ff88;
+}
+</style>
+</head>
+
+<body>
+
+<div class="hero">
+  <h1>CARDIO</h1>
+  <p>Smart Workout Assistant</p>
+</div>
+
+<!-- SELECT -->
+<div class="box">
+  <select id="goal">
+    <option value="fat">Fat Loss</option>
+    <option value="stamina">Stamina</option>
+  </select>
+
+  <select id="level">
+    <option value="beginner">Beginner</option>
+    <option value="pro">Pro</option>
+  </select>
+
+  <select id="time">
+    <option value="10">10 min</option>
+    <option value="15">15 min</option>
+    <option value="20">20 min</option>
+  </select>
+
+  <button onclick="generatePlan()">Generate Plan</button>
+</div>
+
+<!-- PLAN -->
+<div class="box" id="plan">Your plan will appear here</div>
+
+<!-- VIDEO -->
+<div class="player">
+  <iframe id="player" width="100%" height="350"
+    src="https://www.youtube.com/embed/ml6cT4AZdqI"></iframe>
+</div>
+
+<!-- DASHBOARD -->
+<div class="box">
+  ⏱ <span id="timer">00:00</span> |
+  🔥 <span id="cal">0</span> cal |
+  ❤️ <span id="intensity">Low</span>
+</div>
+
+<button onclick="startWorkout()">Start</button>
+<button onclick="pause()">Pause</button>
+<button onclick="reset()">Reset</button>
+
+<!-- TIPS -->
+<div class="tips" id="tips">Stay hydrated 💧</div>
+
+<!-- DIET TOGGLE -->
+<div>
+  <button onclick="toggleDiet('veg')">🥦 Veg</button>
+  <button onclick="toggleDiet('nonveg')">🍗 Non-Veg</button>
+</div>
+
+<!-- DIET -->
+<div class="box diet" id="diet">Diet will appear</div>
+
+<!-- STREAK -->
+<div>🔥 Streak: <span id="streak">0</span> days</div>
+
+<script>
+// ===== DATA =====
+const plans = {
+  fat:["Warm-up","HIIT","Cooldown"],
+  stamina:["Jogging","Cycling","Stretch"]
+};
+
+const diets = {
+  fat:{
+    veg:[
+      {meal:"Breakfast",food:"Oats + Apple",cal:250,protein:"8g"},
+      {meal:"Lunch",food:"Roti + Dal + Veg",cal:400,protein:"15g"},
+      {meal:"Dinner",food:"Salad + Paneer",cal:300,protein:"20g"}
+    ],
+    nonveg:[
+      {meal:"Breakfast",food:"Egg + Toast",cal:300,protein:"18g"},
+      {meal:"Lunch",food:"Rice + Chicken",cal:500,protein:"30g"},
+      {meal:"Dinner",food:"Chicken Salad",cal:350,protein:"25g"}
+    ]
+  },
+  stamina:{
+    veg:[
+      {meal:"Breakfast",food:"Banana + Milk",cal:300,protein:"10g"},
+      {meal:"Lunch",food:"Rice + Dal",cal:450,protein:"15g"},
+      {meal:"Dinner",food:"Paneer + Roti",cal:400,protein:"20g"}
+    ],
+    nonveg:[
+      {meal:"Breakfast",food:"Egg + Banana",cal:350,protein:"20g"},
+      {meal:"Lunch",food:"Rice + Fish",cal:500,protein:"30g"},
+      {meal:"Dinner",food:"Chicken Soup",cal:300,protein:"25g"}
+    ]
+  }
+};
+
+const tipsArr=[
+ "Keep your back straight",
+ "Stay hydrated",
+ "Maintain pace",
+ "Breathe properly"
+];
+
+let dietType="veg";
+
+// ===== PLAN =====
+function generatePlan(){
+  const goal=document.getElementById("goal").value;
+  const time=document.getElementById("time").value;
+
+  document.getElementById("plan").innerText=
+    `${time} min Plan: ${plans[goal].join(" → ")}`;
+
+  updateDiet(goal);
+
+  document.getElementById("player").src=
+    goal==="fat"
+    ?"https://www.youtube.com/embed/ml6cT4AZdqI"
+    :"https://www.youtube.com/embed/UBMk30rjy0o";
+}
+
+// ===== DIET =====
+function toggleDiet(type){
+  dietType=type;
+  generatePlan();
+}
+
+function updateDiet(goal){
+  const data=diets[goal][dietType];
+
+  let html=`<h2>🥗 Diet (${dietType})</h2>`;
+
+  data.forEach(d=>{
+    html+=`
+      <p><b>${d.meal}</b>: ${d.food}<br>
+      🔥 ${d.cal} kcal | 💪 ${d.protein}</p>
+    `;
+  });
+
+  document.getElementById("diet").innerHTML=html;
+}
+
+// ===== TIMER =====
+let t=0,interval=null,cal=0;
+
+function update(){
+  let m=Math.floor(t/60),s=t%60;
+  document.getElementById("timer").innerText=
+    `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function startWorkout(){
+  if(interval) return;
+
+  speak("Start workout");
+
+  interval=setInterval(()=>{
+    t++;
+    cal+=0.2;
+
+    update();
+    document.getElementById("cal").innerText=cal.toFixed(1);
+
+    if(t==60) speak("Good start");
+    if(t==300) speak("Halfway done");
+
+  },1000);
+
+  let s=localStorage.getItem("streak")||0;
+  localStorage.setItem("streak",++s);
+  document.getElementById("streak").innerText=s;
+}
+
+function pause(){
+  clearInterval(interval);
+  interval=null;
+}
+
+function reset(){
+  pause();
+  t=0;
+  cal=0;
+  update();
+  document.getElementById("cal").innerText="0";
+}
+
+// ===== VOICE =====
+function speak(text){
+  const msg=new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(msg);
+}
+
+// ===== TIPS =====
+let i=0;
+setInterval(()=>{
+  i=(i+1)%tipsArr.length;
+  document.getElementById("tips").innerText=tipsArr[i];
+},4000);
+
+// INIT
+document.getElementById("streak").innerText=
+  localStorage.getItem("streak")||0;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Workout Plan</title>
+
+  <!-- Fonts (match landing) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --black:#050507;
+      --deep:#0a0a0f;
+      --panel:rgba(255,255,255,0.035);
+      --border:rgba(255,255,255,0.08);
+      --neon-g:#00ff88;
+      --neon-b:#00c8ff;
+      --neon-glow:0 0 20px rgba(0,255,136,0.5),0 0 60px rgba(0,255,136,0.2);
+      --text:#e8eaf0;
+      --muted:rgba(232,234,240,0.45);
+      --font-display:'Bebas Neue',sans-serif;
+      --font-heading:'Syne',sans-serif;
+      --font-body:'DM Sans',sans-serif;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      background:var(--black);
+      color:var(--text);
+      font-family:var(--font-body);
+      overflow-x:hidden;
+    }
+
+    nav{
+      position:fixed;top:0;left:0;width:100%;z-index:100;
+      padding:20px 60px;display:flex;align-items:center;justify-content:space-between;
+      backdrop-filter:blur(18px);
+      background:rgba(5,5,7,0.6);
+      border-bottom:1px solid var(--border);
+    }
+
+    .nav-logo{
+      font-family:var(--font-display);
+      font-size:1.6rem;letter-spacing:2px;
+      background:linear-gradient(135deg,var(--neon-g),var(--neon-b));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    }
+
+    .nav-links{display:flex;gap:28px;list-style:none}
+    .nav-links a{
+      font-family:var(--font-heading);font-size:0.8rem;font-weight:600;letter-spacing:1px;
+      color:var(--muted);text-decoration:none;text-transform:uppercase;
+    }
+
+    /* HERO (match landing feel) */
+    #hero{
+      position:relative;min-height:100vh;
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      padding:120px 24px 80px;overflow:hidden;
+    }
+
+    /* subtle grid like landing */
+    #hero::before{
+      content:"";position:absolute;inset:0;z-index:0;
+      background-image:
+        linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+      background-size:60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    .hero-content{position:relative;z-index:2;max-width:900px}
+
+    .hero-badge{
+      display:inline-flex;align-items:center;gap:8px;
+      font-family:var(--font-heading);
+      font-size:0.78rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+      padding:8px 20px;border-radius:30px;
+      border:1px solid rgba(0,255,136,0.3);
+      background:rgba(0,255,136,0.07);
+      color:var(--neon-g);
+      margin-bottom:32px;
+    }
+
+    .hero-headline{
+      font-family:var(--font-display);
+      font-size:clamp(4rem,10vw,8rem);
+      line-height:0.92;letter-spacing:3px;
+      background:linear-gradient(160deg,#fff 0%,rgba(255,255,255,0.75) 50%,var(--neon-g) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      margin-bottom:24px;
+    }
+
+    .hero-sub{
+      font-size:1.1rem;color:var(--muted);
+      max-width:520px;margin:0 auto 40px;line-height:1.7;
+    }
+
+    .controls{
+      display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:30px;
+    }
+
+    .input, select{
+      font-family:var(--font-heading);
+      font-size:0.9rem;letter-spacing:1px;
+      padding:14px 20px;border-radius:40px;
+      border:1px solid var(--border);
+      background:var(--panel);color:var(--text);
+      backdrop-filter:blur(10px);
+      outline:none;
+    }
+
+    .btn-primary{
+      font-family:var(--font-heading);font-weight:700;font-size:0.95rem;
+      letter-spacing:1.5px;text-transform:uppercase;
+      padding:16px 36px;border-radius:50px;border:none;
+      background:linear-gradient(135deg,var(--neon-g),#00d4a0);
+      color:#050507;cursor:pointer;
+      transition:transform 0.2s,box-shadow 0.3s;
+    }
+    .btn-primary:hover{transform:translateY(-3px);box-shadow:0 8px 40px rgba(0,255,136,0.5),var(--neon-glow)}
+    .btn-primary:active{transform:scale(0.96)}
+
+    /* RESULT CARD (glass like landing cards) */
+    .result-wrap{max-width:900px;margin:20px auto 0}
+
+    .result-card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:28px 24px;
+      backdrop-filter:blur(18px);
+      text-align:left;
+      box-shadow:0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .result-title{
+      font-family:var(--font-heading);
+      font-size:1rem;font-weight:700;letter-spacing:1px;
+      color:var(--neon-g);
+      margin-bottom:10px;
+      text-transform:uppercase;
+    }
+
+    .day{
+      padding:12px 14px;border-radius:14px;margin:8px 0;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,0.02);
+    }
+
+    .day strong{font-family:var(--font-heading)}
+    .day span{color:var(--muted);font-size:0.9rem}
+
+    .empty{color:var(--muted);text-align:center;margin-top:10px}
+
+    footer{
+      margin-top:60px;padding:30px;text-align:center;color:var(--muted);
+      border-top:1px solid var(--border);
+    }
+
+    @media (max-width:768px){
+      nav{padding:16px 24px}
+      .nav-links{display:none}
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">AIFT</div>
+    <ul class="nav-links">
+      <li><a href="index.html#features">Features</a></li>
+      <li><a href="index.html#workouts">Workouts</a></li>
+      <li><a href="index.html#ai-demo">AI Demo</a></li>
+      <li><a href="index.html#why">Why Us</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-content">
+      <div class="hero-badge">🧠 Smart Workout Plans</div>
+
+      <h1 class="hero-headline">BUILD YOUR<br>SMART PLAN</h1>
+
+      <p class="hero-sub">
+        Adaptive AI generates a personalised weekly program based on your goal, experience, and availability.
+      </p>
+
+      <div class="controls">
+        <select id="goal">
+          <option value="muscle">Muscle Gain</option>
+          <option value="fat">Fat Loss</option>
+          <option value="endurance">Endurance</option>
+        </select>
+
+        <select id="level">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+
+        <select id="days">
+          <option value="3">3 Days / Week</option>
+          <option value="4">4 Days / Week</option>
+          <option value="5">5 Days / Week</option>
+          <option value="6">6 Days / Week</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" onclick="generatePlan()">Generate Plan</button>
+
+      <div class="result-wrap">
+        <div id="empty" class="empty">Choose your preferences and generate your plan.</div>
+        <div id="result" class="result-card" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>© 2026 AI Fitness Trainer</footer>
+
+  <script>
+    function generatePlan(){
+      const goal = document.getElementById('goal').value;
+      const level = document.getElementById('level').value;
+      const days = parseInt(document.getElementById('days').value);
+
+      const result = document.getElementById('result');
+      const empty = document.getElementById('empty');
+
+      empty.style.display = 'none';
+      result.style.display = 'block';
+
+      const splitMuscle = [
+        'Chest + Triceps',
+        'Back + Biceps',
+        'Legs + Core',
+        'Shoulders + Arms',
+        'Full Body',
+        'Legs (Strength)'
+      ];
+
+      const splitFat = [
+        'HIIT + Core',
+        'Upper Body + Cardio',
+        'Lower Body + HIIT',
+        'Full Body Circuit',
+        'Cardio Endurance',
+        'Mobility + Light Cardio'
+      ];
+
+      const splitEndurance = [
+        'Long Cardio + Core',
+        'Interval Training',
+        'Upper Body Light',
+        'Lower Body Light',
+        'Tempo Run / Cycle',
+        'Recovery + Mobility'
+      ];
+
+      let split = splitMuscle;
+      if(goal==='fat') split = splitFat;
+      if(goal==='endurance') split = splitEndurance;
+
+      let html = `<div class=\"result-title\">Your Weekly Plan (${level})</div>`;
+
+      for(let i=0;i<days;i++){
+        html += `
+          <div class=\"day\">
+            <strong>Day ${i+1}</strong><br>
+            <span>${split[i % split.length]}</span>
+          </div>
+        `;
+      }
+
+      result.innerHTML = html;
+    }
+
+    // simple test cases (dev checks)
+    console.log('Plan page loaded ✅');
+    console.assert(typeof generatePlan === 'function', 'generatePlan should exist');
+  </script>
+
+</body>
+</html>

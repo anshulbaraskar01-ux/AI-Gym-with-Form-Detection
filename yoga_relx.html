@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yoga & Flex</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:#050507;
+  color:#fff;
+  font-family:'Syne', sans-serif;
+  overflow-x:hidden;
+}
+
+/* ===== 3D BG ===== */
+#bg{
+  position:fixed;
+  inset:0;
+  z-index:0;
+}
+
+/* GRID OVERLAY */
+.grid-overlay{
+  position:fixed;
+  inset:0;
+  background:
+    linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+  background-size:60px 60px;
+  z-index:1;
+  mask-image: radial-gradient(circle, black 40%, transparent 90%);
+}
+
+/* SOFT GLOW */
+.glow{
+  position:fixed;
+  width:600px;
+  height:600px;
+  background:radial-gradient(circle, rgba(0,255,136,0.12), transparent 70%);
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  filter:blur(80px);
+  z-index:1;
+}
+
+/* ===== HERO ===== */
+.hero{
+  position:relative;
+  z-index:2;
+  height:60vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
+}
+
+.hero h1{
+  font-family:'Bebas Neue';
+  font-size:clamp(4rem,10vw,8rem);
+  letter-spacing:3px;
+  background:linear-gradient(135deg,#fff,#00ff88);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.hero p{
+  color:rgba(255,255,255,0.6);
+}
+
+/* ===== PLAYER ===== */
+.player{
+  position:relative;
+  z-index:2;
+  max-width:900px;
+  margin:40px auto;
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px);
+}
+
+/* ===== FILTER ===== */
+.filters{
+  position:relative;
+  z-index:2;
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin:30px;
+}
+
+.filters button{
+  padding:10px 22px;
+  border-radius:30px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);
+  color:#fff;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.filters button:hover{
+  border-color:#00ff88;
+  color:#00ff88;
+}
+
+/* ===== GRID ===== */
+.grid{
+  position:relative;
+  z-index:2;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:24px;
+  padding:40px;
+}
+
+.card{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:24px;
+  transition:0.4s;
+  position:relative;
+  cursor:pointer;
+}
+
+.card:hover{
+  transform:translateY(-8px) scale(1.03);
+  border-color:#00ff88;
+  box-shadow:0 0 30px rgba(0,255,136,0.15);
+}
+
+.lock{
+  position:absolute;
+  top:12px;
+  right:12px;
+  font-size:0.7rem;
+  border:1px solid #00ff88;
+  padding:3px 10px;
+  border-radius:20px;
+  color:#00ff88;
+}
+
+.meta{
+  font-size:0.8rem;
+  color:rgba(255,255,255,0.5);
+}
+
+.play{
+  margin-top:12px;
+  padding:8px 18px;
+  border:none;
+  border-radius:20px;
+  background:#00ff88;
+  color:#050507;
+  font-weight:600;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+<div class="grid-overlay"></div>
+<div class="glow"></div>
+
+<section class="hero">
+  <h1>YOGA & FLEX</h1>
+  <p>Balance your body & mind</p>
+</section>
+
+<div class="player">
+  <iframe id="player"
+    width="100%" height="400"
+    src="https://www.youtube.com/embed/v7AYKMP6rOE"
+    frameborder="0" allowfullscreen>
+  </iframe>
+</div>
+
+<div class="filters">
+  <button onclick="filterVideos('all')">All</button>
+  <button onclick="filterVideos('beginner')">Beginner</button>
+  <button onclick="filterVideos('advanced')">Advanced</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ===== VIDEO SYSTEM =====
+const videos = [
+  {title:"Morning Yoga", id:"v7AYKMP6rOE", level:"beginner", free:true},
+  {title:"Relax Stretch", id:"4pKly2JojMw", level:"beginner", free:true},
+  {title:"Deep Flexibility", id:"inpok4MKVLM", level:"advanced", free:false},
+  {title:"Power Yoga", id:"sTANio_2E0Q", level:"advanced", free:false}
+];
+
+const grid = document.getElementById("grid");
+const player = document.getElementById("player");
+
+function render(list){
+  grid.innerHTML="";
+  list.forEach(v=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      ${!v.free?'<div class="lock">LOCKED</div>':''}
+      <h4>${v.title}</h4>
+      <div class="meta">${v.level}</div>
+      <button class="play">${v.free?"Play":"Unlock"}</button>
+    `;
+
+    div.onclick=()=>{
+      if(!v.free){
+        alert("🔒 Purchase required");
+        return;
+      }
+      player.src=`https://www.youtube.com/embed/${v.id}`;
+    };
+
+    grid.appendChild(div);
+  });
+}
+
+function filterVideos(type){
+  if(type==="all") return render(videos);
+  render(videos.filter(v=>v.level===type));
+}
+
+render(videos);
+
+
+// ===== YOGA STYLE 3D BACKGROUND =====
+(function(){
+  const canvas=document.getElementById("bg");
+  const renderer=new THREE.WebGLRenderer({canvas,alpha:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,100);
+  camera.position.z=25;
+
+  // energy rings
+  const rings=[];
+  for(let i=0;i<5;i++){
+    const geo=new THREE.RingGeometry(3+i*1.5,3.2+i*1.5,64);
+    const mat=new THREE.MeshBasicMaterial({
+      color:i%2===0?0x00ff88:0x00c8ff,
+      side:THREE.DoubleSide,
+      transparent:true,
+      opacity:0.07
+    });
+
+    const ring=new THREE.Mesh(geo,mat);
+    ring.rotation.x=Math.PI/2;
+    ring.position.y=-2+i*1.2;
+
+    scene.add(ring);
+    rings.push(ring);
+  }
+
+  // center orb
+  const orbGeo=new THREE.SphereGeometry(2,32,32);
+  const orbMat=new THREE.MeshBasicMaterial({
+    color:0x00ff88,
+    transparent:true,
+    opacity:0.08
+  });
+
+  const orb=new THREE.Mesh(orbGeo,orbMat);
+  scene.add(orb);
+
+  // particles
+  const pGeo=new THREE.BufferGeometry();
+  const count=300;
+  const pos=new Float32Array(count*3);
+
+  for(let i=0;i<count*3;i++){
+    pos[i]=(Math.random()-0.5)*40;
+  }
+
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+
+  const pMat=new THREE.PointsMaterial({
+    color:0x00ff88,
+    size:0.12,
+    transparent:true,
+    opacity:0.4
+  });
+
+  const particles=new THREE.Points(pGeo,pMat);
+  scene.add(particles);
+
+  let t=0;
+
+  function animate(){
+    requestAnimationFrame(animate);
+    t+=0.01;
+
+    const scale=1+Math.sin(t)*0.1;
+    orb.scale.set(scale,scale,scale);
+
+    rings.forEach((r,i)=>{
+      r.rotation.z+=0.001+i*0.0005;
+      r.position.y=-2+i*1.2+Math.sin(t+i)*0.2;
+    });
+
+    particles.rotation.y+=0.0005;
+
+    renderer.render(scene,camera);
+  }
+
+  animate();
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coming Soon</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin:0;
+  background:#050507;
+  color:white;
+  font-family:'Syne', sans-serif;
+  overflow:hidden;
+}
+
+/* 3D canvas */
+#bg {
+  position:fixed;
+  inset:0;
+  z-index:0;
+}
+
+/* center content */
+.content {
+  position:relative;
+  z-index:2;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+/* glow effect */
+.glow {
+  position:absolute;
+  width:600px;
+  height:600px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(0,255,136,0.15), transparent 70%);
+  filter:blur(80px);
+  z-index:1;
+}
+
+/* heading */
+h1 {
+  font-family:'Bebas Neue';
+  font-size:clamp(4rem,10vw,9rem);
+  letter-spacing:3px;
+  background:linear-gradient(135deg,#fff,#00ff88);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+/* subtext */
+p {
+  color:rgba(255,255,255,0.5);
+  margin-top:10px;
+}
+
+/* button */
+button {
+  margin-top:30px;
+  padding:14px 40px;
+  border-radius:40px;
+  border:none;
+  background:#00ff88;
+  color:#050507;
+  font-weight:700;
+  cursor:pointer;
+}
+button:hover {
+  box-shadow:0 0 20px #00ff88;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="glow"></div>
+
+<div class="content">
+  <h1>COMING SOON</h1>
+  <p>This module is under development</p>
+  <button onclick="history.back()">Go Back</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// 3D background
+const canvas = document.getElementById("bg");
+const renderer = new THREE.WebGLRenderer({ canvas, alpha:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.z = 30;
+
+const objects = [];
+
+// shapes
+for(let i=0;i<6;i++){
+  const geo = i%2===0
+    ? new THREE.TorusKnotGeometry(1.2,0.4,100,16)
+    : new THREE.IcosahedronGeometry(1.5,1);
+
+  const mat = new THREE.MeshBasicMaterial({
+    color: i%2===0 ? 0x00ff88 : 0x00c8ff,
+    wireframe:true,
+    transparent:true,
+    opacity:0.2
+  });
+
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(
+    (Math.random()-0.5)*40,
+    (Math.random()-0.5)*30,
+    (Math.random()-0.5)*20
+  );
+
+  scene.add(mesh);
+  objects.push(mesh);
+}
+
+// animation
+function animate(){
+  requestAnimationFrame(animate);
+  objects.forEach(o=>{
+    o.rotation.x += 0.002;
+    o.rotation.y += 0.003;
+  });
+  renderer.render(scene,camera);
+}
+animate();
+
+// resize
+window.addEventListener("resize",()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+</script>
+
+</body>
+</html>

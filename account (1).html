@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIFT — Forge Your Body</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════ RESET & ROOT */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black:   #08080a;
+  --deep:    #0d0d10;
+  --panel:   #111115;
+  --border:  rgba(255,255,255,0.07);
+  --neon:    #00ff88;
+  --fire:    #ff4d00;
+  --ice:     #00d4ff;
+  --text:    #f0f0f5;
+  --muted:   #6b6b78;
+  --input-bg:#17171c;
+  --radius:  14px;
+  --font-display: 'Bebas Neue', cursive;
+  --font-ui:      'Barlow Condensed', sans-serif;
+  --font-body:    'Barlow', sans-serif;
+}
+
+
+
+html, body {
+  height: 100%;
+  background: var(--black);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════ 3D SCENE */
+.scene {
+  position: fixed;
+  inset: 0;
+  perspective: 900px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animated grid floor */
+.grid-floor {
+  position: absolute;
+  bottom: -10%;
+  left: -20%;
+  width: 140%;
+  height: 55%;
+  transform: rotateX(72deg);
+  background-image:
+    linear-gradient(rgba(232,255,0,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232,255,0,0.12) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridScroll 6s linear infinite;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,0) 100%);
+}
+
+@keyframes gridScroll {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 60px; }
+}
+
+/* Volumetric blobs */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.35;
+  animation: blobFloat 8s ease-in-out infinite alternate;
+}
+.blob-1 {
+  width: 480px; height: 480px;
+  top: -120px; left: -100px;
+  background: radial-gradient(circle, #e8ff00 0%, transparent 70%);
+  animation-duration: 9s;
+}
+.blob-2 {
+  width: 380px; height: 380px;
+  bottom: -80px; right: -80px;
+  background: radial-gradient(circle, #ff4d00 0%, transparent 70%);
+  animation-duration: 7s;
+  animation-delay: -3s;
+}
+.blob-3 {
+  width: 300px; height: 300px;
+  top: 40%; right: 10%;
+  background: radial-gradient(circle, #00d4ff 0%, transparent 70%);
+  animation-duration: 11s;
+  animation-delay: -5s;
+  opacity: 0.2;
+}
+
+@keyframes blobFloat {
+  0%   { transform: translate(0,0) scale(1); }
+  100% { transform: translate(30px, 40px) scale(1.1); }
+}
+
+/* Floating particles */
+.particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: var(--neon);
+  border-radius: 50%;
+  opacity: 0;
+  animation: rise linear infinite;
+}
+
+@keyframes rise {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: 0.8; }
+  90%  { opacity: 0.4; }
+  100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════ LAYOUT */
+.page {
+  position: relative;
+  z-index: 10;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ══════════════════════════════════════════════ CARD */
+.card {
+  width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px 36px 36px;
+  position: relative;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    0 0 0 1px rgba(232,255,0,0.04),
+    0 40px 80px rgba(0,0,0,0.6),
+    0 0 120px rgba(232,255,0,0.04) inset;
+  animation: cardIn 0.6s cubic-bezier(.22,.68,0,1.2) both;
+}
+.card::-webkit-scrollbar { display: none; }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(40px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* accent top line */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon), transparent);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+
+/* ══════════════════════════════════════════════ LOGO / BRAND */
+.brand {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.brand-icon {
+  width: 56px; height: 56px;
+  background: var(--neon);
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  font-size: 26px;
+  box-shadow: 0 0 30px rgba(232,255,0,0.5), 0 8px 20px rgba(0,0,0,0.4);
+  transform: rotate(-4deg);
+  animation: iconPop 0.5s 0.3s cubic-bezier(.22,.68,0,1.4) both;
+}
+
+@keyframes iconPop {
+  from { transform: rotate(-4deg) scale(0); }
+  to   { transform: rotate(-4deg) scale(1); }
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #ffffff 30%, var(--neon) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.brand-tag {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ══════════════════════════════════════════════ SECTION TITLE */
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  letter-spacing: 3px;
+  color: var(--text);
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════ INPUTS */
+.field {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+.field input {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--input-bg);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+}
+
+.field input::placeholder { color: var(--muted); font-size: 0.9rem; }
+
+.field input:focus {
+  border-color: rgba(232,255,0,0.5);
+  background: #1c1c22;
+  box-shadow: 0 0 0 3px rgba(232,255,0,0.08), 0 0 20px rgba(232,255,0,0.05) inset;
+}
+
+/* ══════════════════════════════════════════════ CTA BUTTON */
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  background: var(--neon);
+  color: #0a0a0a;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.25s;
+  box-shadow: 0 0 30px rgba(232,255,0,0.3), 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 50px rgba(232,255,0,0.5), 0 12px 30px rgba(0,0,0,0.4);
+}
+.btn-primary:hover::before { opacity: 1; }
+.btn-primary:active { transform: translateY(0); }
+
+/* ══════════════════════════════════════════════ LINK ROW */
+.link-row {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  letter-spacing: 0.5px;
+}
+.link-row .link {
+  color: var(--neon);
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+.link-row .link:hover { opacity: 0.7; }
+
+.back-link {
+  text-align: center;
+  margin-top: 18px;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  letter-spacing: 1px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--text); }
+
+/* ══════════════════════════════════════════════ ERROR */
+.error-msg {
+  color: #ff6666;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  letter-spacing: 1px;
+  min-height: 20px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════════ DIVIDER */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-family: var(--font-ui);
+  letter-spacing: 2px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ══════════════════════════════════════════════ GOAL PILLS */
+.step-label {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.goal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.goal-btn {
+  padding: 20px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.goal-btn .emoji {
+  display: block;
+  font-size: 2rem;
+  margin-bottom: 8px;
+  transition: transform 0.2s;
+}
+
+.goal-btn:hover {
+  border-color: var(--neon);
+  background: rgba(232,255,0,0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 20px rgba(232,255,0,0.1);
+}
+.goal-btn:hover .emoji { transform: scale(1.2); }
+
+/* Full-width for odd last item */
+.goal-grid .goal-btn.full { grid-column: 1 / -1; }
+
+/* Level buttons */
+.level-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.level-btn {
+  padding: 22px 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  text-align: center;
+  transition: all 0.2s;
+}
+.level-btn .badge {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin-top: 4px;
+  font-weight: 400;
+}
+.level-btn:hover {
+  border-color: var(--fire);
+  background: rgba(255,77,0,0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 20px rgba(255,77,0,0.1);
+}
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.progress-bar .dot {
+  height: 3px;
+  flex: 1;
+  border-radius: 99px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.progress-bar .dot.active {
+  background: var(--neon);
+  box-shadow: 0 0 8px rgba(232,255,0,0.5);
+}
+
+/* ══════════════════════════════════════════════ HIDDEN */
+.hidden { display: none !important; }
+
+/* ══════════════════════════════════════════════ STEP TRANSITION */
+.step-in {
+  animation: stepIn 0.35s cubic-bezier(.22,.68,0,1.1) both;
+}
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ══════════════════════════════════════════════ RESPONSIVE */
+@media (max-width: 460px) {
+  .card { padding: 28px 20px 24px; width: 100%; border-radius: 20px; }
+  .brand-name { font-size: 2rem; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ───── 3D SCENE ───── -->
+<div class="scene">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="grid-floor"></div>
+  <div class="particles" id="particles"></div>
+</div>
+
+<!-- ───── MAIN PAGE ───── -->
+<div class="page">
+  <div class="card">
+
+    <!-- BRAND -->
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-name">AIFT</div>
+      <div class="brand-tag">AI Fitness Training</div>
+    </div>
+
+    <!-- ═══════ LOGIN BOX ═══════ -->
+    <div id="loginBox">
+      <div class="section-title">SIGN IN</div>
+
+      <div class="field">
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <div class="error-msg" id="loginError"></div>
+
+      <button class="btn-primary" onclick="login()">ENTER SYSTEM →</button>
+
+      <div class="divider">OR</div>
+
+      <div class="link-row">
+        No account? <span class="link" onclick="showSignup()">Build One Free</span>
+      </div>
+    </div>
+
+    <!-- ═══════ SIGNUP BOX ═══════ -->
+    <div id="signupBox" class="hidden">
+
+      <!-- Step 1 — Goal -->
+      <div id="step1">
+        <div class="progress-bar">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="section-title">YOUR GOAL?</div>
+        <div class="step-label">What are we training for</div>
+        <div class="goal-grid">
+          <button class="goal-btn" onclick="next('goal','Muscle')">
+            <span class="emoji">💪</span>BUILD MUSCLE
+          </button>
+          <button class="goal-btn" onclick="next('goal','Fat Loss')">
+            <span class="emoji">🔥</span>FAT LOSS
+          </button>
+          <button class="goal-btn full" onclick="next('goal','Strength')">
+            <span class="emoji">⚡</span>RAW STRENGTH
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2 — Level -->
+      <div id="step2" class="hidden">
+        <div class="progress-bar">
+          <div class="dot active"></div>
+          <div class="dot active"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="section-title">YOUR LEVEL?</div>
+        <div class="step-label">Be honest — we'll calibrate</div>
+        <div class="level-grid">
+          <button class="level-btn" onclick="next('level','Beginner')">
+            ROOKIE
+            <span class="badge">0 – 1 YEAR</span>
+          </button>
+          <button class="level-btn" onclick="next('level','Intermediate')">
+            FIGHTER
+            <span class="badge">1 – 3 YEARS</span>
+          </button>
+          <button class="level-btn" onclick="next('level','Advanced')">
+            BEAST
+            <span class="badge">3+ YEARS</span>
+          </button>
+          <button class="level-btn" onclick="next('level','Elite')">
+            ELITE
+            <span class="badge">COMPETITIVE</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3 — Account -->
+      <div id="step3" class="hidden">
+        <div class="progress-bar">
+          <div class="dot active"></div>
+          <div class="dot active"></div>
+          <div class="dot active"></div>
+        </div>
+        <div class="section-title">CREATE ACCOUNT</div>
+
+        <div class="field">
+          <label>Full Name</label>
+          <input id="name" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="pass" type="password" placeholder="Choose a strong password" autocomplete="new-password">
+        </div>
+
+        <div class="error-msg" id="signupError"></div>
+        <button class="btn-primary" onclick="finish()">FORGE MY PLAN 🚀</button>
+      </div>
+
+      <div class="back-link" onclick="goBack()">← Back</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ──────────────────────────────── PARTICLES */
+(function(){
+  const container = document.getElementById('particles');
+  for(let i = 0; i < 40; i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${Math.random()*100}%;
+      width: ${Math.random() > 0.5 ? 2 : 3}px;
+      height: ${Math.random() > 0.5 ? 2 : 3}px;
+      animation-duration: ${5 + Math.random()*12}s;
+      animation-delay: ${Math.random()*10}s;
+      opacity: 0;
+    `;
+    // some yellow, some orange
+    p.style.background = Math.random() > 0.5 ? '#e8ff00' : '#ff4d00';
+    container.appendChild(p);
+  }
+})();
+
+/* ──────────────────────────────── STATE */
+let userData = {};
+let currentStep = 1;
+const TOTAL_STEPS = 3;
+
+/* ──────────────────────────────── SWITCH VIEWS */
+function showSignup(){
+  document.getElementById('loginBox').classList.add('hidden');
+  document.getElementById('signupBox').classList.remove('hidden');
+  showStep(1);
+}
+function showLogin(){
+  document.getElementById('signupBox').classList.add('hidden');
+  document.getElementById('loginBox').classList.remove('hidden');
+  document.getElementById('loginError').innerText = '';
+}
+
+/* ──────────────────────────────── STEP MANAGEMENT */
+function showStep(n){
+  for(let i = 1; i <= TOTAL_STEPS; i++){
+    const el = document.getElementById('step'+i);
+    if(i === n){ el.classList.remove('hidden'); el.classList.add('step-in'); }
+    else        { el.classList.add('hidden'); el.classList.remove('step-in'); }
+  }
+  currentStep = n;
+}
+
+function next(key, value){
+  userData[key] = value;
+  showStep(currentStep + 1);
+}
+
+function goBack(){
+  if(currentStep > 1){ showStep(currentStep - 1); }
+  else { showLogin(); }
+}
+
+/* ──────────────────────────────── LOGIN */
+function login(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+
+  if(!email || !pass){ errEl.innerText = 'Please fill in all fields.'; return; }
+
+  const users = JSON.parse(localStorage.getItem('aift_users')) || [];
+  const user  = users.find(u => u.email === email && u.password === pass);
+
+  if(user){
+    localStorage.setItem('aift_currentUser', email);
+    errEl.innerText = '';
+    document.querySelector('.btn-primary').innerText = 'LOADING...';
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+  } else {
+    errEl.innerText = '⚠ Invalid email or password.';
+    document.querySelector('#loginBox .card-inner, #loginBox input[type=password]')?.classList.add('shake');
+  }
+}
+
+/* ──────────────────────────────── SIGNUP FINISH */
+function finish(){
+  const name  = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const pass  = document.getElementById('pass').value;
+  const errEl = document.getElementById('signupError');
+
+  if(!name)                      { errEl.innerText = '⚠ Enter your name.'; return; }
+  if(!email || !email.includes('@')) { errEl.innerText = '⚠ Enter a valid email.'; return; }
+  if(pass.length < 6)            { errEl.innerText = '⚠ Password needs 6+ characters.'; return; }
+
+  let users = JSON.parse(localStorage.getItem('aift_users')) || [];
+  if(users.find(u => u.email === email)){ errEl.innerText = '⚠ Email already registered.'; return; }
+
+  userData.name     = name;
+  userData.email    = email;
+  userData.password = pass;
+  userData.created  = new Date().toISOString();
+
+  users.push(userData);
+  localStorage.setItem('aift_users', JSON.stringify(users));
+  localStorage.setItem('aift_currentUser', email);
+
+  errEl.style.color = '#e8ff00';
+  errEl.innerText = '✓ Account created! Loading...';
+  document.querySelector('#step3 .btn-primary').innerText = 'LAUNCHING...';
+  setTimeout(() => { window.location.href = 'dashboard.html'; }, 900);
+}
+
+/* ──────────────────────────────── AUTO-LOGIN */
+if(localStorage.getItem('aift_currentUser')){
+  window.location.href = 'dashboard.html';
+}
+
+/* ──────────────────────────────── ENTER KEY */
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Enter') return;
+  if(!document.getElementById('loginBox').classList.contains('hidden')) login();
+  else if(currentStep === 3) finish();
+});
+</script>
+</body>
+</html>

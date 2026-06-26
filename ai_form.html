@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Form Detection</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700&family=DM+Sans&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --black:#050507;
+      --deep:#0a0a0f;
+      --neon:#00ff88;
+      --text:#e8eaf0;
+      --muted:rgba(232,234,240,0.5);
+      --red:#ff3c3c;
+    }
+
+    body {
+      margin:0;
+      background:var(--black);
+      color:var(--text);
+      font-family:'DM Sans',sans-serif;
+    }
+
+    nav {
+      position:fixed;
+      width:100%;
+      padding:20px 40px;
+      display:flex;
+      justify-content:space-between;
+      background:rgba(0,0,0,0.6);
+      backdrop-filter:blur(10px);
+      z-index:10;
+    }
+
+    .logo {
+      font-family:'Bebas Neue';
+      font-size:1.5rem;
+      color:var(--neon);
+    }
+
+    section {
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:120px 20px;
+    }
+
+    .hero h1 {
+      font-family:'Bebas Neue';
+      font-size:80px;
+      line-height:0.9;
+    }
+
+    .hero p {
+      color:var(--muted);
+      max-width:500px;
+      margin:auto;
+    }
+
+    .btn {
+      margin-top:20px;
+      padding:15px 40px;
+      background:var(--neon);
+      color:black;
+      border:none;
+      border-radius:30px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    video {
+      margin-top:30px;
+      width:420px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,0.1);
+    }
+
+    .feedback {
+      margin-top:20px;
+      font-size:1.2rem;
+      color:var(--neon);
+    }
+
+    .error {
+      margin-top:20px;
+      color:var(--red);
+      font-size:0.9rem;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<nav>
+  <div class="logo">AIFT</div>
+</nav>
+
+<section class="hero">
+  <div>
+    <h1>PERFECT YOUR<br>FORM WITH AI</h1>
+    <p>Real-time posture tracking using AI. Improve performance and prevent injuries.</p>
+
+    <button class="btn" onclick="startCamera()">Start Camera</button>
+
+    <br>
+    <video id="video" autoplay playsinline></video>
+
+    <div id="feedback" class="feedback">Waiting...</div>
+    <div id="error" class="error"></div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+
+<script>
+const video = document.getElementById('video');
+const feedback = document.getElementById('feedback');
+const errorBox = document.getElementById('error');
+
+const pose = new Pose({
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+});
+
+pose.onResults((results) => {
+  if (results.poseLandmarks) {
+    const knee = results.poseLandmarks[26];
+    const hip = results.poseLandmarks[24];
+
+    if (knee.y > hip.y) {
+      feedback.innerText = "Perfect Squat 👍";
+    } else {
+      feedback.innerText = "Go Lower 👇";
+    }
+  }
+});
+
+async function startCamera() {
+  errorBox.innerText = "";
+
+  // IMPORTANT: Must be HTTPS or localhost
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+    errorBox.innerText = "Camera requires HTTPS (or localhost). Please host properly.";
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+
+    const camera = new Camera(video, {
+      onFrame: async () => {
+        await pose.send({ image: video });
+      },
+      width: 640,
+      height: 480
+    });
+
+    camera.start();
+
+  } catch (err) {
+    console.error(err);
+
+    if (err.name === "NotAllowedError") {
+      errorBox.innerText = "Camera permission denied ❌ — Please allow camera access and reload.";
+    } else if (err.name === "NotFoundError") {
+      errorBox.innerText = "No camera found on this device.";
+    } else {
+      errorBox.innerText = "Camera error: " + err.message;
+    }
+  }
+}
+
+// BASIC TEST CHECKS (debugging helpers)
+console.log("Page Loaded ✅");
+console.log("MediaDevices Supported:", !!navigator.mediaDevices);
+</script>
+
+</body>
+</html>

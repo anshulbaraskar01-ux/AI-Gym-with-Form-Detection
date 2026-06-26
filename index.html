@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Fitness Trainer — Train Smarter</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <style>
+    /* =============================================
+       ROOT & RESET
+    ============================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:      #050507;
+      --deep:       #0a0a0f;
+      --panel:      rgba(255,255,255,0.035);
+      --border:     rgba(255,255,255,0.08);
+      --neon-g:     #00ff88;
+      --neon-b:     #00c8ff;
+      --neon-glow:  0 0 20px rgba(0,255,136,0.5), 0 0 60px rgba(0,255,136,0.2);
+      --neon-bglow: 0 0 20px rgba(0,200,255,0.5), 0 0 60px rgba(0,200,255,0.2);
+      --text:       #e8eaf0;
+      --muted:      rgba(232,234,240,0.45);
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-heading: 'Syne', sans-serif;
+      --font-body:    'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* =============================================
+       CUSTOM CURSOR
+    ============================================= */
+    #cursor-dot {
+      width: 8px; height: 8px;
+      background: var(--neon-g);
+      border-radius: 50%;
+      position: fixed; top: 0; left: 0;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: transform 0.05s, background 0.2s;
+      box-shadow: var(--neon-glow);
+    }
+    #cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid rgba(0,255,136,0.45);
+      border-radius: 50%;
+      position: fixed; top: 0; left: 0;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: transform 0.18s ease, width 0.25s, height 0.25s, border-color 0.2s;
+    }
+    body:hover #cursor-dot { opacity: 1; }
+
+    /* =============================================
+       SCROLLBAR
+    ============================================= */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--deep); }
+    ::-webkit-scrollbar-thumb { background: var(--neon-g); border-radius: 2px; }
+
+    /* =============================================
+       NAV
+    ============================================= */
+    nav {
+      position: fixed; top: 0; left: 0; width: 100%;
+      z-index: 100;
+      padding: 20px 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(18px);
+      background: rgba(5,5,7,0.6);
+      border-bottom: 1px solid var(--border);
+      transition: padding 0.3s;
+    }
+    nav.scrolled { padding: 14px 60px; }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--neon-g), var(--neon-b));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 1px;
+      background: var(--neon-g);
+      transition: width 0.3s;
+    }
+    .nav-links a:hover { color: var(--neon-g); }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-cta {
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 10px 28px;
+      border-radius: 30px;
+      background: var(--neon-g);
+      color: #050507;
+      border: none;
+      cursor: none;
+      text-transform: uppercase;
+      transition: box-shadow 0.3s, transform 0.2s;
+    }
+    .nav-cta:hover { box-shadow: var(--neon-glow); transform: scale(1.04); }
+
+    /* =============================================
+       HERO SECTION
+    ============================================= */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      padding: 120px 24px 80px;
+    }
+
+    /* Three.js canvas bg */
+    #hero-canvas {
+      position: absolute; inset: 0;
+      z-index: 0;
+    }
+
+    /* Grid overlay */
+    .hero-grid {
+      position: absolute; inset: 0; z-index: 1;
+      background-image:
+        linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    /* Radial glow centre */
+    .hero-glow {
+      position: absolute; z-index: 1;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,136,0.12) 0%, rgba(0,200,255,0.06) 40%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse-glow 4s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+      50%      { transform: translate(-50%,-50%) scale(1.12); opacity: 0.7; }
+    }
+
+    .hero-content { position: relative; z-index: 2; max-width: 900px; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-heading);
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 8px 20px;
+      border-radius: 30px;
+      border: 1px solid rgba(0,255,136,0.3);
+      background: rgba(0,255,136,0.07);
+      color: var(--neon-g);
+      margin-bottom: 32px;
+    }
+    .hero-badge-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--neon-g);
+      box-shadow: 0 0 8px var(--neon-g);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero-headline {
+      font-family: var(--font-display);
+      font-size: clamp(4.5rem, 12vw, 10rem);
+      line-height: 0.92;
+      letter-spacing: 3px;
+      background: linear-gradient(160deg, #ffffff 0%, rgba(255,255,255,0.75) 50%, var(--neon-g) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 28px;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: 0.5px;
+      max-width: 520px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      position: relative; overflow: hidden;
+      font-family: var(--font-heading);
+      font-weight: 700; font-size: 0.95rem;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 16px 44px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, var(--neon-g), #00d4a0);
+      color: #050507;
+      cursor: none;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    .btn-primary::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(0,255,136,0.5), var(--neon-glow); }
+    .btn-primary:hover::before { opacity: 1; }
+
+    .btn-ghost {
+      font-family: var(--font-heading);
+      font-weight: 600; font-size: 0.95rem;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 15px 44px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      cursor: none;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.3s, transform 0.2s, color 0.3s;
+    }
+    .btn-ghost:hover { border-color: rgba(0,200,255,0.5); color: var(--neon-b); transform: translateY(-3px); }
+
+    .hero-scroll {
+      position: absolute; bottom: 36px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .scroll-label {
+      font-family: var(--font-heading);
+      font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .scroll-line {
+      width: 1px; height: 50px;
+      background: linear-gradient(to bottom, var(--neon-g), transparent);
+      animation: scroll-drop 1.8s ease-in-out infinite;
+    }
+    @keyframes scroll-drop { 0%{transform:scaleY(0);transform-origin:top} 50%{transform:scaleY(1);transform-origin:top} 51%{transform-origin:bottom} 100%{transform:scaleY(0);transform-origin:bottom} }
+
+    /* =============================================
+       SECTION COMMONS
+    ============================================= */
+    section { padding: 120px 60px; }
+
+    .section-tag {
+      display: inline-block;
+      font-family: var(--font-heading);
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: var(--neon-g);
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      line-height: 1;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #fff 40%, rgba(255,255,255,0.5) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+    }
+    .section-sub {
+      font-size: 1.05rem; color: var(--muted); line-height: 1.75;
+      max-width: 520px;
+    }
+
+    /* =============================================
+       FEATURES SECTION
+    ============================================= */
+    #features { background: var(--deep); }
+
+    .features-header { text-align: center; margin-bottom: 80px; }
+    .features-header .section-sub { margin: 0 auto; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 44px 36px;
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+      transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), box-shadow 0.4s;
+      cursor: none;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: 24px;
+      background: linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,200,255,0.04));
+      opacity: 0; transition: opacity 0.4s;
+    }
+    .feature-card::after {
+      content: '';
+      position: absolute; inset: -1px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(0,255,136,0.4), rgba(0,200,255,0.2), transparent 60%);
+      z-index: -1; opacity: 0; transition: opacity 0.4s;
+    }
+    .feature-card:hover { transform: translateY(-10px) scale(1.01); box-shadow: 0 30px 80px rgba(0,255,136,0.12); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover::after { opacity: 1; }
+
+    .feature-icon {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1));
+      border: 1px solid rgba(0,255,136,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 28px;
+      transition: box-shadow 0.3s;
+    }
+    .feature-card:hover .feature-icon { box-shadow: 0 0 30px rgba(0,255,136,0.3); }
+
+    .feature-number {
+      position: absolute; top: 28px; right: 28px;
+      font-family: var(--font-display);
+      font-size: 4rem; line-height: 1;
+      color: rgba(255,255,255,0.04);
+      letter-spacing: 2px;
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-heading);
+      font-size: 1.3rem; font-weight: 700;
+      margin-bottom: 14px; letter-spacing: 0.5px;
+    }
+    .feature-card p {
+      font-size: 0.95rem; color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .feature-tag {
+      display: inline-block;
+      margin-top: 24px;
+      font-family: var(--font-heading);
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--neon-g);
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(0,255,136,0.25);
+      background: rgba(0,255,136,0.06);
+    }
+
+    /* =============================================
+       WORKOUT SECTION
+    ============================================= */
+    #workouts {
+      background: var(--black);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .workouts-inner { max-width: 1200px; margin: 0 auto; }
+    .workouts-header { margin-bottom: 64px; }
+
+    .workouts-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .workout-card {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      cursor: none;
+      overflow: hidden;
+      transition: transform 0.35s cubic-bezier(0.23,1,0.32,1), border-color 0.3s, box-shadow 0.35s;
+    }
+    .workout-card:hover { transform: scale(1.06) translateY(-6px); border-color: rgba(0,255,136,0.3); box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,255,136,0.1); }
+
+    .workout-emoji { font-size: 2.6rem; display: block; margin-bottom: 16px; }
+
+    .workout-card h4 {
+      font-family: var(--font-heading);
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .workout-card span {
+      font-size: 0.8rem; color: var(--muted);
+    }
+
+    .workout-card-glow {
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 120%, rgba(0,255,136,0.1), transparent 60%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .workout-card:hover .workout-card-glow { opacity: 1; }
+
+    /* =============================================
+       AI DEMO SECTION
+    ============================================= */
+    #ai-demo {
+      background: var(--deep);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ai-demo-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: center;
+    }
+
+    .ai-demo-content .section-sub { margin-bottom: 40px; }
+
+    .ai-stat-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .ai-stat-row {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .ai-stat-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .ai-stat-icon.green { background: rgba(0,255,136,0.12); }
+    .ai-stat-icon.blue  { background: rgba(0,200,255,0.12); }
+    .ai-stat-icon.red   { background: rgba(255,80,80,0.12); }
+
+    .ai-stat-text strong {
+      display: block; font-family: var(--font-heading);
+      font-size: 0.9rem; font-weight: 700; margin-bottom: 2px;
+    }
+    .ai-stat-text span { font-size: 0.8rem; color: var(--muted); }
+
+    /* AI Visualiser */
+    .ai-viz {
+      position: relative;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      aspect-ratio: 1 / 1.15;
+      backdrop-filter: blur(10px);
+    }
+
+    .ai-viz-header {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    .ai-viz-title {
+      font-family: var(--font-heading);
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--neon-g);
+    }
+    .ai-viz-status {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.72rem; color: var(--neon-g);
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--neon-g);
+      box-shadow: 0 0 8px var(--neon-g);
+      animation: blink 1.2s infinite;
+    }
+
+    #ai-canvas {
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    .ai-viz-footer {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 14px 20px;
+      background: rgba(0,0,0,0.4);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .ai-feedback-text {
+      font-family: var(--font-heading);
+      font-size: 0.82rem; font-weight: 600;
+      color: var(--text);
+    }
+    .ai-feedback-text span { color: var(--neon-g); }
+
+    /* scan line effect */
+    .scan-line {
+      position: absolute; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--neon-g), transparent);
+      opacity: 0.6;
+      animation: scan 3s ease-in-out infinite;
+      z-index: 5;
+    }
+    @keyframes scan { 0%{top:60px;opacity:0} 10%{opacity:0.6} 90%{opacity:0.6} 100%{top:calc(100% - 50px);opacity:0} }
+
+    /* =============================================
+       WHY CHOOSE US
+    ============================================= */
+    #why {
+      background: var(--black);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .why-bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+    }
+    .why-bg-orb.a { width: 600px; height: 600px; background: rgba(0,255,136,0.07); top: -200px; right: -200px; }
+    .why-bg-orb.b { width: 500px; height: 500px; background: rgba(0,200,255,0.06); bottom: -150px; left: -150px; }
+
+    .why-header { margin-bottom: 80px; }
+
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 24px; max-width: 900px; margin: 0 auto 80px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 44px 32px;
+      backdrop-filter: blur(14px);
+      position: relative; overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .stat-card:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(0,255,136,0.1); }
+
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 6vw, 4.5rem);
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, var(--neon-g), var(--neon-b));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      display: block; line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-family: var(--font-heading);
+      font-size: 0.9rem; font-weight: 600;
+      color: var(--muted); letter-spacing: 0.5px;
+    }
+
+    .why-features {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 20px; max-width: 1100px; margin: 0 auto;
+    }
+    .why-feature-row {
+      display: flex; align-items: flex-start; gap: 16px;
+      text-align: left;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.3s;
+    }
+    .why-feature-row:hover { border-color: rgba(0,200,255,0.3); }
+    .why-feature-row .icon { font-size: 1.6rem; flex-shrink: 0; }
+    .why-feature-row h4 { font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+    .why-feature-row p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+    /* =============================================
+       FINAL CTA SECTION
+    ============================================= */
+    #cta {
+      background: var(--deep);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(100px); pointer-events: none;
+    }
+    .cta-orb.a { width: 800px; height: 800px; background: rgba(0,255,136,0.06); top: -300px; left: 50%; transform: translateX(-50%); }
+
+    .cta-inner { position: relative; z-index: 2; max-width: 700px; margin: 0 auto; }
+
+    .cta-headline {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      line-height: 0.95;
+      letter-spacing: 2px;
+      background: linear-gradient(160deg, #fff 0%, rgba(255,255,255,0.6) 50%, var(--neon-g) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 24px;
+    }
+    .cta-sub { font-size: 1.1rem; color: var(--muted); line-height: 1.75; margin-bottom: 52px; }
+
+    .cta-btn-wrap { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    .btn-glow {
+      position: relative;
+      font-family: var(--font-heading);
+      font-weight: 700; font-size: 1rem;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 18px 56px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, var(--neon-g), #00d4a0);
+      color: #050507;
+      cursor: none;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    .btn-glow::after {
+      content: '';
+      position: absolute; inset: -2px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, var(--neon-g), var(--neon-b), var(--neon-g));
+      z-index: -1;
+      opacity: 0; transition: opacity 0.3s;
+      animation: border-rotate 3s linear infinite;
+      background-size: 200% 200%;
+    }
+    @keyframes border-rotate { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    .btn-glow:hover { transform: translateY(-4px); box-shadow: 0 10px 60px rgba(0,255,136,0.55), var(--neon-glow); }
+    .btn-glow:hover::after { opacity: 1; }
+
+    .cta-trust {
+      margin-top: 40px;
+      font-size: 0.82rem; color: var(--muted);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .trust-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--muted); }
+
+    /* =============================================
+       FOOTER
+    ============================================= */
+    footer {
+      background: var(--black);
+      border-top: 1px solid var(--border);
+      padding: 40px 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 1.4rem; letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--neon-g), var(--neon-b));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    footer p { font-size: 0.8rem; color: var(--muted); }
+
+    /* =============================================
+       REVEAL ANIMATIONS
+    ============================================= */
+    .reveal { opacity: 0; transform: translateY(30px); }
+.cardbyanshul{
+  color: #e8eaf0;
+}
+    /* =============================================
+       RESPONSIVE
+    ============================================= */
+    @media (max-width: 1024px) {
+      nav { padding: 18px 32px; }
+      nav.scrolled { padding: 12px 32px; }
+      section { padding: 100px 32px; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .workouts-grid { grid-template-columns: repeat(2,1fr); }
+      .ai-demo-inner { grid-template-columns: 1fr; gap: 48px; }
+      .why-features { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      section { padding: 80px 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .why-features { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 12px; text-align: center; }
+      #cursor-dot, #cursor-ring { display: none; }
+      body { cursor: auto; }
+    }
+
+    .feature-card {
+     display: flex;
+     align-items: flex-start;
+     gap: 20px; 
+    }
+
+    .feature-icon {
+     min-width: 60px;
+    }
+
+    .feature-content {
+     flex: 1;
+    }
+
+    .feature-card {
+  display: flex;
+  flex-direction: column;
+}
+  </style>
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- =============================================
+       NAV
+  ============================================= -->
+  <nav id="navbar">
+    <div class="nav-logo">AIFT</div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#workouts">Workouts</a></li>
+      <li><a href="#ai-demo">AI Demo</a></li>
+      <li><a href="#why">Why Us</a></li>
+    </ul>
+    <a href="/frontend/loin_ai.html"><button class="nav-cta" onclick="window.location.href='/loin_ai.html'">
+      Get Started
+    </button>
+    </a>
+    </nav>
+
+  <!-- =============================================
+       HERO SECTION
+  ============================================= -->
+  <section id="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge reveal">
+        <span class="hero-badge-dot"></span>
+        AI-Powered Fitness Platform &nbsp;·&nbsp; v2.0 Live
+      </div>
+      <h1 class="hero-headline reveal">
+        TRAIN<br>SMARTER<br>WITH AI
+      </h1>
+      <p class="hero-sub reveal">
+        Real-time posture correction, adaptive workout plans,<br>
+        and a 24/7 AI coach that evolves with you.
+      </p>
+      <div class="hero-actions reveal">
+       
+        <a href="/frontend/loin_ai.html"><button class="btn-glow reveal" onclick="window.location.href='account (1).html'">
+          Start Training
+        </button>
+        </a>
+        <button class="btn-ghost" onclick="document.getElementById('ai-demo').scrollIntoView({behavior:'smooth'})">Watch Demo</button>
+      </div>
+    </div>
+
+    <div class="hero-scroll">
+      <span class="scroll-label">Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       FEATURES SECTION
+  ============================================= -->
+  <section id="features">
+    <div class="features-header">
+      <span class="section-tag reveal">Core Technology</span>
+      <h2 class="section-title reveal">Powered By Intelligence</h2>
+      <p class="section-sub reveal">Three breakthrough AI systems working in perfect sync to transform every rep, every set, every session.</p>
+    </div>
+    <div class="features-grid">
+
+      <!-- CARD 1 -->
+      <div class="feature-card" onclick="window.location.href='ai_form.html'">
+        <span class="feature-number">01</span>
+        <div class="feature-icon">🎯</div>
+        <h3>AI Form Detection</h3>
+        <p>Computer vision tracks 33 key body landmarks in real time...</p>
+        <span class="feature-tag">Computer Vision</span>
+      </div>
+    
+      <!-- CARD 2 -->
+      <div class="feature-card" onclick="window.location.href='ai_workout_plan.html'">
+        <span class="feature-number">02</span>
+        <div class="feature-icon">🧠</div>
+        <h3>Smart Workout Plans</h3>
+        <p>Adaptive algorithms build hyper-personalised programs...</p>
+        <span class="feature-tag">Adaptive AI</span>
+      </div>
+    
+      <!-- CARD 3 -->
+      <div class="feature-card" onclick="window.location.href='ai_feedback.html'">
+        <span class="feature-number">03</span>
+        <div class="feature-icon">⚡</div>
+        <h3>Real-Time Feedback</h3>
+        <p>Instant audio and visual cues correct your form...</p>
+        <span class="feature-tag">&lt; 12ms Latency</span>
+      </div>
+    
+    </div>
+  </section>
+
+  <!-- =============================================
+       WORKOUT SECTION
+  ============================================= -->
+  <section id="workouts">
+    <div class="workouts-inner">
+      <div class="workouts-header">
+        <span class="section-tag reveal">Training Library</span>
+        <h2 class="section-title reveal">Every Discipline.<br>One Platform.</h2>
+      </div>
+      <a class="cardbyanshul" href="/frontend/new_strength.html">
+      <div class="workouts-grid">
+        <div class="workout-card reveal" onclick="window.location.href='strength.html'">
+          <div class="workout-card-glow"></div>
+          <span class="workout-emoji">🏋️</span>
+          <h4>Strength</h4>
+          <span>240+ exercises</span>
+        </div>
+        </a>
+        <a class="cardbyanshul" href="/frontend/new_card.html">
+        <div class="workout-card reveal" onclick="window.location.href='cardio.html'">
+          <div class="workout-card-glow"></div>
+          <span class="workout-emoji">🏃</span>
+          <h4>Cardio</h4>
+          <span>HIIT & Endurance</span>
+        </div>
+        </a>
+        <a class="cardbyanshul" href="/frontend/yoga_relx.html">
+        <div class="workout-card reveal" onclick="window.location.href='yoga_flex.html'">
+          <div class="workout-card-glow"></div>
+          <span class="workout-emoji">🧘</span>
+          <h4>Yoga & Flex</h4>
+          <span>Mobility focused</span>
+        </div>
+        </a>
+        <a class="cardbyanshul" href="/frontend/comingsoon.html">
+        <div class="workout-card reveal" onclick="window.location.href='combat.html'">
+          <div class="workout-card-glow"></div>
+          <span class="workout-emoji">🥊</span>
+          <h4>Combat</h4>
+          <span>Boxing & MMA</span>
+        </div>
+        </a>
+        <a class="cardbyanshul" href="/frontend/comingsoon.html">
+        <div class="workout-card reveal" onclick="window.location.href='cycling.html'">
+          <div class="workout-card-glow"></div>
+          <span class="workout-emoji">🚴</span>
+          <h4>Cycling</h4>
+          <span>Indoor & outdoor</span>
+        </div>
+        </a>
+        <a class="cardbyanshul" href="/frontend/comingsoon.html">
+        <div class="workout-card reveal" onclick="window.location.href='swimming.html'">
+          <div class="workout-card-glow"></div>
+          <span class="workout-emoji">🏊</span>
+          <h4>Swimming</h4>
+          <span>Stroke analysis</span>
+        </div>
+        </a>
+        <a class="cardbyanshul" href="/frontend/comingsoon.html">
+        <div class="workout-card reveal" onclick="window.location.href='calisthenics.html'">
+          <div class="workout-card-glow"></div>
+          <span class="workout-emoji">🤸</span>
+          <h4>Calisthenics</h4>
+          <span>Bodyweight mastery</span>
+        </div>
+        </a>
+        <a class="cardbyanshul" href="/frontend/comingsoon.html">
+        <div class="workout-card reveal" onclick="window.location.href='recovery.html'">
+          <div class="workout-card-glow"></div>
+          <span class="workout-emoji">🎽</span>
+          <h4>Recovery</h4>
+          <span>AI sleep coaching</span>
+        </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       AI DEMO SECTION
+  ============================================= -->
+  <section id="ai-demo">
+    <div class="ai-demo-inner">
+
+      <!-- Left: Visualiser -->
+      <div class="ai-viz reveal">
+        <div class="ai-viz-header">
+          <span class="ai-viz-title">AI Pose Tracking</span>
+          <div class="ai-viz-status">
+            <div class="status-dot"></div>
+            LIVE ANALYSIS
+          </div>
+        </div>
+        <div class="scan-line"></div>
+        <canvas id="ai-canvas"></canvas>
+        <div class="ai-viz-footer">
+          <div class="ai-feedback-text" id="feedback-text">
+            ✓ Spine alignment <span>optimal</span> — great squat depth
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Text -->
+      <div class="ai-demo-content">
+        <span class="section-tag reveal">AI in Action</span>
+        <h2 class="section-title reveal">See Every Move.<br>Fix Every Rep.</h2>
+        <p class="section-sub reveal">
+          Our pose-estimation engine maps your skeleton in real time, compares it against thousands of perfect reps, and surfaces corrections the instant something goes off.
+        </p>
+        <div class="ai-stat-list">
+          <div class="ai-stat-row reveal">
+            <div class="ai-stat-icon green">✅</div>
+            <div class="ai-stat-text">
+              <strong>Green Lines — Perfect Form</strong>
+              <span>Joints tracked within optimal range of motion</span>
+            </div>
+          </div>
+          <div class="ai-stat-row reveal">
+            <div class="ai-stat-icon red">⚠️</div>
+            <div class="ai-stat-text">
+              <strong>Red Lines — Needs Correction</strong>
+              <span>Instant haptic + audio alert with fix suggestion</span>
+            </div>
+          </div>
+          <div class="ai-stat-row reveal">
+            <div class="ai-stat-icon blue">🔵</div>
+            <div class="ai-stat-text">
+              <strong>Confidence Score Overlay</strong>
+              <span>Per-joint accuracy shown every frame</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =============================================
+       WHY CHOOSE US
+  ============================================= -->
+  <section id="why">
+    <div class="why-bg-orb a"></div>
+    <div class="why-bg-orb b"></div>
+
+    <div class="why-header">
+      <span class="section-tag reveal">Results Speak</span>
+      <h2 class="section-title reveal">Why 10K+ Athletes<br>Trust AI Fitness Trainer</h2>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card reveal">
+        <span class="stat-number" data-target="10000">0</span>
+        <span class="stat-label">Active Athletes</span>
+      </div>
+      <div class="stat-card reveal">
+        <span class="stat-number" data-target="95" data-suffix="%">0%</span>
+        <span class="stat-label">Form Accuracy</span>
+      </div>
+      <div class="stat-card reveal">
+        <span class="stat-number">24/7</span>
+        <span class="stat-label">AI Coach Access</span>
+      </div>
+    </div>
+
+    <div class="why-features">
+      <div class="why-feature-row reveal">
+        <span class="icon">🔒</span>
+        <div>
+          <h4>Privacy-First Processing</h4>
+          <p>All pose analysis runs on-device. Your video never leaves your phone.</p>
+        </div>
+      </div>
+      <div class="why-feature-row reveal">
+        <span class="icon">📈</span>
+        <div>
+          <h4>Progress Intelligence</h4>
+          <p>Tracks strength curves, mobility scores, and body composition over time.</p>
+        </div>
+      </div>
+      <div class="why-feature-row reveal">
+        <span class="icon">🌐</span>
+        <div>
+          <h4>Works Offline</h4>
+          <p>No internet? No problem. Full AI runs locally on your device.</p>
+        </div>
+      </div>
+      <div class="why-feature-row reveal">
+        <span class="icon">🤝</span>
+        <div>
+          <h4>Human Coach Integration</h4>
+          <p>Loop in a real trainer any time — they see exactly what the AI sees.</p>
+        </div>
+      </div>
+      <div class="why-feature-row reveal">
+        <span class="icon">🎮</span>
+        <div>
+          <h4>Gamified Streaks</h4>
+          <p>XP, leaderboards, and achievements make consistency addictive.</p>
+        </div>
+      </div>
+      <div class="why-feature-row reveal">
+        <span class="icon">🩺</span>
+        <div>
+          <h4>Injury Prevention Engine</h4>
+          <p>Flags overtraining patterns before they become injuries.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================================
+       FINAL CTA
+  ============================================= -->
+  <section id="cta">
+    <div class="cta-orb a"></div>
+    <div class="cta-inner">
+      <span class="section-tag reveal">Ready?</span>
+      <h2 class="cta-headline reveal">START YOUR<br>FITNESS<br>JOURNEY TODAY</h2>
+      <p class="cta-sub reveal">Join 10,000+ athletes already training smarter. Set up takes 60 seconds. Your first AI session is free.</p>
+      <div class="cta-btn-wrap">
+        <a href="/frontend/loin_ai.html"><button class="btn-glow reveal" onclick="window.location.href='account.html'">
+          Start Training — Free
+        </button>
+        </a>
+        <button class="btn-ghost reveal" style="padding:18px 44px">Watch Demo</button>
+      </div>
+      <p class="cta-trust reveal">
+        <span>No credit card needed</span>
+        <span class="trust-dot"></span>
+        <span>Cancel anytime</span>
+        <span class="trust-dot"></span>
+        <span>iOS & Android</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- =============================================
+       FOOTER
+  ============================================= -->
+  <footer>
+    <div class="footer-logo">AIFT</div>
+    <p>© 2026 AI Fitness Trainer. All rights reserved.</p>
+    <p style="font-size:0.8rem;color:var(--muted)">Built By⚡Anshul & Team</p>
+  </footer>
+
+  <!-- =============================================
+       THREE.JS (Hero particles)
+  ============================================= -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+  /* =============================================
+     CURSOR
+  ============================================= */
+  const dot  = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  (function animCursor(){
+    dot.style.left  = mx + 'px';
+    dot.style.top   = my + 'px';
+    rx += (mx - rx) * 0.14;
+    ry += (my - ry) *.14;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    requestAnimationFrame(animCursor);
+  })();
+
+  document.querySelectorAll('button, a, .feature-card, .workout-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      ring.style.width  = '56px'; ring.style.height = '56px';
+      ring.style.borderColor = 'rgba(0,255,136,0.8)';
+    });
+    el.addEventListener('mouseleave', () => {
+      ring.style.width  = '36px'; ring.style.height = '36px';
+      ring.style.borderColor = 'rgba(0,255,136,0.45)';
+    });
+  });
+
+  /* =============================================
+     NAV SCROLL
+  ============================================= */
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', scrollY > 40);
+  });
+
+  /* =============================================
+     THREE.JS HERO BACKGROUND
+  ============================================= */
+  (function initHero3D(){
+    const canvas = document.getElementById('hero-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.z = 30;
+
+    // Floating torus knots + icosahedra
+    const objects = [];
+    const NEON_G = 0x00ff88;
+    const NEON_B = 0x00c8ff;
+
+    const matG = new THREE.MeshBasicMaterial({ color: NEON_G, wireframe: true, transparent: true, opacity: 0.18 });
+    const matB = new THREE.MeshBasicMaterial({ color: NEON_B, wireframe: true, transparent: true, opacity: 0.12 });
+
+    for (let i = 0; i < 6; i++) {
+      const geo = i % 2 === 0
+        ? new THREE.TorusKnotGeometry(1.2 + Math.random() * 0.8, 0.35, 80, 12)
+        : new THREE.IcosahedronGeometry(1.4 + Math.random() * 0.6, 1);
+      const mat = i % 3 === 0 ? matG.clone() : matB.clone();
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 30,
+        (Math.random() - 0.5) * 20 - 5
+      );
+      mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      mesh.userData = {
+        rx: (Math.random() - 0.5) * 0.004,
+        ry: (Math.random() - 0.5) * 0.006,
+        fy: (Math.random() - 0.5) * 0.003,
+        originY: mesh.position.y
+      };
+      scene.add(mesh);
+      objects.push(mesh);
+    }
+
+    // Particle stars
+    const pGeo = new THREE.BufferGeometry();
+    const pCount = 800;
+    const pos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount * 3; i++) pos[i] = (Math.random() - 0.5) * 120;
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const pMat = new THREE.PointsMaterial({ color: 0x00ff88, size: 0.12, transparent: true, opacity: 0.55 });
+    scene.add(new THREE.Points(pGeo, pMat));
+
+    let t = 0;
+    function animate(){
+      requestAnimationFrame(animate);
+      t += 0.01;
+      objects.forEach(o => {
+        o.rotation.x += o.userData.rx;
+        o.rotation.y += o.userData.ry;
+        o.position.y = o.userData.originY + Math.sin(t + o.userData.fy * 100) * 1.2;
+      });
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Subtle parallax
+    document.addEventListener('mousemove', e => {
+      const x = (e.clientX / window.innerWidth - 0.5);
+      const y = (e.clientY / window.innerHeight - 0.5);
+      camera.position.x += (x * 3 - camera.position.x) * 0.04;
+      camera.position.y += (-y * 2 - camera.position.y) * 0.04;
+    });
+  })();
+
+  /* =============================================
+     AI DEMO CANVAS
+  ============================================= */
+  (function initAICanvas(){
+    const canvas = document.getElementById('ai-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize(){
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Skeleton joints (normalized 0-1)
+    const joints = {
+      head:   [0.50, 0.10],
+      neck:   [0.50, 0.18],
+      lSho:   [0.35, 0.24],
+      rSho:   [0.65, 0.24],
+      lElb:   [0.28, 0.37],
+      rElb:   [0.72, 0.37],
+      lWri:   [0.22, 0.50],
+      rWri:   [0.78, 0.50],
+      hip:    [0.50, 0.46],
+      lHip:   [0.41, 0.48],
+      rHip:   [0.59, 0.48],
+      lKne:   [0.39, 0.64],
+      rKne:   [0.61, 0.64],
+      lAnk:   [0.38, 0.82],
+      rAnk:   [0.62, 0.82],
+    };
+
+    const connections = [
+      ['head','neck'],
+      ['neck','lSho'],['neck','rSho'],
+      ['lSho','lElb'],['lElb','lWri'],
+      ['rSho','rElb'],['rElb','rWri'],
+      ['neck','hip'],
+      ['hip','lHip'],['hip','rHip'],
+      ['lHip','lKne'],['lKne','lAnk'],
+      ['rHip','rKne'],['rKne','rAnk'],
+    ];
+
+    // Red connections = incorrect form
+    const redConns = new Set(['lElb,lWri','rElb,rWri']);
+
+    let phase = 0;
+    const feedbacks = [
+      '✓ Spine alignment <span>optimal</span> — great squat depth',
+      '⚠ Left elbow <span style="color:#ff5050">overextended</span> — tuck in slightly',
+      '✓ Hip hinge <span>correct</span> — keep driving through heels',
+      '⚠ Right wrist <span style="color:#ff5050">deviation</span> — neutral grip recommended',
+    ];
+
+    setInterval(() => {
+      phase = (phase + 1) % feedbacks.length;
+      document.getElementById('feedback-text').innerHTML = feedbacks[phase];
+    }, 2800);
+
+    let t = 0;
+    function drawFrame(){
+      requestAnimationFrame(drawFrame);
+      t += 0.012;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const W = canvas.width, H = canvas.height;
+      const offsetX = W * 0.5;
+      const offsetY = H * 0.07;
+      const scale   = H * 0.86;
+
+      function jx(k){ return joints[k][0] * W * 0.6 + offsetX * 0.2 + Math.sin(t * 0.7 + k.length) * 3; }
+      function jy(k){ return joints[k][1] * scale + offsetY; }
+
+      // body glow fill (silhouette-like)
+      ctx.save();
+      ctx.globalAlpha = 0.06;
+      ctx.fillStyle = '#00ff88';
+      ctx.beginPath();
+      ctx.ellipse(W*0.5, H*0.5, W*0.22, H*0.38, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+
+      // Draw connections
+      connections.forEach(([a, b]) => {
+        const key1 = a + ',' + b;
+        const key2 = b + ',' + a;
+        const isRed = (phase === 1 && (key1 === 'lElb,lWri' || key2 === 'lElb,lWri'))
+                   || (phase === 3 && (key1 === 'rElb,rWri' || key2 === 'rElb,rWri'));
+
+        const grad = ctx.createLinearGradient(jx(a), jy(a), jx(b), jy(b));
+        if (isRed) {
+          grad.addColorStop(0, 'rgba(255,60,60,0.9)');
+          grad.addColorStop(1, 'rgba(255,60,60,0.6)');
+        } else {
+          grad.addColorStop(0, 'rgba(0,255,136,0.9)');
+          grad.addColorStop(1, 'rgba(0,200,255,0.7)');
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(jx(a), jy(a));
+        ctx.lineTo(jx(b), jy(b));
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = isRed ? '#ff3c3c' : '#00ff88';
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      });
+
+      // Draw joints
+      Object.keys(joints).forEach(k => {
+        const x = jx(k), y = jy(k);
+        const isRedJoint = (phase===1 && (k==='lElb'||k==='lWri')) || (phase===3 && (k==='rElb'||k==='rWri'));
+
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = isRedJoint ? '#ff5050' : '#fff';
+        ctx.shadowColor = isRedJoint ? '#ff3c3c' : '#00ff88';
+        ctx.shadowBlur = 14;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Pulse ring
+        const pulse = (Math.sin(t * 2 + x) + 1) * 0.5;
+        ctx.beginPath();
+        ctx.arc(x, y, 8 + pulse * 4, 0, Math.PI * 2);
+        ctx.strokeStyle = isRedJoint ? `rgba(255,80,80,${0.15+pulse*0.2})` : `rgba(0,255,136,${0.15+pulse*0.2})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // Confidence labels (a few joints)
+      const labelJoints = ['lSho','rSho','lHip','rHip'];
+      ctx.font = '500 10px DM Sans, sans-serif';
+      labelJoints.forEach(k => {
+        const conf = (96 + Math.floor(Math.sin(t + k.length * 3.7) * 3));
+        ctx.fillStyle = 'rgba(0,255,136,0.7)';
+        ctx.fillText(conf + '%', jx(k) + 8, jy(k) - 6);
+      });
+    }
+    drawFrame();
+  })();
+
+  /* =============================================
+     GSAP SCROLL ANIMATIONS
+  ============================================= */
+  gsap.registerPlugin(ScrollTrigger);
+
+  gsap.utils.toArray('.reveal').forEach((el, i) => {
+    gsap.fromTo(el,
+      { opacity: 0, y: 40 },
+      {
+        opacity: 1, y: 0,
+        duration: 0.85,
+        ease: 'power3.out',
+        delay: (i % 4) * 0.08,
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 90%',
+          toggleActions: 'play none none none',
+        }
+      }
+    );
+  });
+
+  /* =============================================
+     COUNTER ANIMATION
+  ============================================= */
+  document.querySelectorAll('[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => {
+        gsap.to({ val: 0 }, {
+          val: target,
+          duration: 2,
+          ease: 'power2.out',
+          onUpdate: function() {
+            const v = Math.round(this.targets()[0].val);
+            el.textContent = target >= 1000
+              ? (v >= 1000 ? v.toLocaleString() + '+' : v)
+              : v + suffix;
+          }
+        });
+      }
+    });
+  });
+
+  /* =============================================
+     HERO CONTENT STAGGER ON LOAD
+  ============================================= */
+  gsap.fromTo('.hero-content .reveal',
+    { opacity: 0, y: 50 },
+    { opacity: 1, y: 0, duration: 1, stagger: 0.18, ease: 'power4.out', delay: 0.4 }
+  );
+  </script>
+</body>
+</html>

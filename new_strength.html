@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STRENGTH — Build Power & Muscle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #050507;
+    --bg2: #080810;
+    --green: #00ff88;
+    --green-dim: rgba(0,255,136,0.15);
+    --green-mid: rgba(0,255,136,0.4);
+    --glass: rgba(255,255,255,0.03);
+    --glass-border: rgba(255,255,255,0.07);
+    --text: #e8e8f0;
+    --muted: rgba(232,232,240,0.45);
+    --card-bg: rgba(10,10,20,0.7);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ── CANVAS ── */
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.35;
+  }
+
+  /* radial glow */
+  .radial-glow {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 900px; height: 900px;
+    background: radial-gradient(circle, rgba(0,255,136,0.06) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 3rem;
+    background: rgba(5,5,7,0.6);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-shadow: 0 0 20px rgba(0,255,136,0.5);
+  }
+
+  .nav-links {
+    display: flex; gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--green); }
+
+  .nav-cta {
+    background: var(--green-dim);
+    border: 1px solid var(--green-mid);
+    color: var(--green);
+    padding: 0.55rem 1.4rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .nav-cta:hover {
+    background: rgba(0,255,136,0.25);
+    box-shadow: 0 0 20px rgba(0,255,136,0.3);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-top: 5rem;
+    position: relative;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--green-dim);
+    border: 1px solid rgba(0,255,136,0.25);
+    border-radius: 100px;
+    padding: 0.35rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(7rem, 18vw, 16rem);
+    line-height: 0.85;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, #ffffff 0%, #c0ffd8 50%, var(--green) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 0 60px rgba(0,255,136,0.25));
+    animation: fadeUp 1s ease 0.2s both;
+  }
+
+  .hero-sub {
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 1.2rem;
+    animation: fadeUp 1s ease 0.4s both;
+  }
+
+  .hero-sub span { color: var(--green); }
+
+  .hero-stats {
+    display: flex;
+    gap: 4rem;
+    margin-top: 4rem;
+    animation: fadeUp 1s ease 0.6s both;
+  }
+
+  .stat { text-align: center; }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    color: var(--green);
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(0,255,136,0.4);
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    animation: fadeUp 1s ease 1s both;
+  }
+
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--green), transparent);
+    animation: scrollLine 1.5s ease-in-out infinite;
+  }
+
+  @keyframes scrollLine {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  /* ── CONTROL PANEL ── */
+  .controls-section {
+    padding: 6rem 0 2rem;
+  }
+
+  .controls-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .control-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+
+  .control-group {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(20px);
+    flex: 1;
+    min-width: 260px;
+  }
+
+  .control-group-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-sel {
+    padding: 0.6rem 1.3rem;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.03);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-transform: uppercase;
+  }
+
+  .btn-sel:hover {
+    border-color: var(--green-mid);
+    color: var(--green);
+    background: var(--green-dim);
+    box-shadow: 0 0 12px rgba(0,255,136,0.15);
+  }
+
+  .btn-sel.active {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--green-dim);
+    box-shadow: 0 0 20px rgba(0,255,136,0.25), inset 0 0 10px rgba(0,255,136,0.05);
+  }
+
+  /* ── WORKOUT CARDS ── */
+  .workouts-section { padding: 3rem 0; }
+
+  .cards-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .muscle-tag {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--green);
+    letter-spacing: 0.15em;
+    border: 1px solid var(--green-mid);
+    padding: 0.3rem 1rem;
+    border-radius: 100px;
+    background: var(--green-dim);
+    text-shadow: 0 0 10px rgba(0,255,136,0.3);
+    transition: all 0.3s;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.2rem;
+  }
+
+  .exercise-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.6rem;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    animation: cardIn 0.5s ease both;
+  }
+
+  .exercise-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .exercise-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(0,255,136,0.15), 0 0 0 1px rgba(0,255,136,0.2);
+    border-color: rgba(0,255,136,0.3);
+  }
+
+  .exercise-card:hover::before { opacity: 1; }
+
+  .card-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+    margin-bottom: 0.8rem;
+  }
+
+  .card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.7rem;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 1.2rem;
+  }
+
+  .card-details {
+    display: flex;
+    gap: 0.8rem;
+  }
+
+  .card-badge {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .card-badge.sets { border-color: rgba(0,255,136,0.2); color: var(--green); }
+
+  .card-icon {
+    position: absolute;
+    bottom: 1.2rem;
+    right: 1.2rem;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--green-dim);
+    border: 1px solid rgba(0,255,136,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s;
+  }
+
+  .exercise-card:hover .card-icon {
+    background: rgba(0,255,136,0.2);
+    box-shadow: 0 0 15px rgba(0,255,136,0.3);
+    transform: rotate(15deg) scale(1.1);
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── VIDEO SECTION ── */
+  .video-section { padding: 3rem 0; }
+
+  .video-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .video-wrapper {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    position: relative;
+  }
+
+  .video-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(0,255,136,0.03), transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .video-embed {
+    width: 100%;
+    aspect-ratio: 16/9;
+    display: block;
+    border: none;
+  }
+
+  .video-meta {
+    padding: 1.4rem 1.6rem;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .video-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.05em;
+  }
+
+  .video-desc {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    line-height: 1.6;
+  }
+
+  /* Timer Panel */
+  .timer-panel {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .timer-display {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: rgba(0,255,136,0.03);
+    border: 1px solid rgba(0,255,136,0.1);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .timer-display::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(0,255,136,0.05), transparent 70%);
+  }
+
+  .timer-time {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4.5rem;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    text-shadow: 0 0 30px rgba(0,255,136,0.5);
+    line-height: 1;
+    position: relative;
+  }
+
+  .timer-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+    position: relative;
+  }
+
+  .sets-counter {
+    text-align: center;
+  }
+
+  .sets-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .sets-row {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .set-dot {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.03);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--muted);
+    transition: all 0.3s;
+  }
+
+  .set-dot.done {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 10px rgba(0,255,136,0.2);
+  }
+
+  .set-dot.active {
+    background: rgba(0,255,136,0.25);
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 15px rgba(0,255,136,0.4);
+    animation: dotPulse 1s infinite;
+  }
+
+  @keyframes dotPulse {
+    0%,100% { box-shadow: 0 0 10px rgba(0,255,136,0.3); }
+    50% { box-shadow: 0 0 20px rgba(0,255,136,0.6); }
+  }
+
+  .timer-controls { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .btn-ctrl {
+    padding: 0.85rem;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.03);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+
+  .btn-ctrl:hover {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .btn-ctrl.primary {
+    background: var(--green);
+    border-color: var(--green);
+    color: #050507;
+    box-shadow: 0 4px 20px rgba(0,255,136,0.3);
+  }
+
+  .btn-ctrl.primary:hover {
+    background: #00ffaa;
+    box-shadow: 0 6px 30px rgba(0,255,136,0.5);
+    transform: translateY(-1px);
+  }
+
+  .btn-ctrl.secondary {
+    border-color: rgba(0,255,136,0.3);
+    color: var(--green);
+  }
+
+  .btn-ctrl.secondary:hover {
+    background: var(--green-dim);
+    box-shadow: 0 0 15px rgba(0,255,136,0.15);
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-ring {
+    position: absolute;
+    top: 0.5rem; right: 0.5rem;
+    width: 40px; height: 40px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--glass-border);
+    padding: 2.5rem 0;
+    margin-top: 5rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  footer span { color: var(--green); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .video-layout { grid-template-columns: 1fr; }
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero-stats { gap: 2rem; }
+  }
+
+  @media (max-width: 600px) {
+    .wrapper { padding: 0 1.2rem; }
+    .control-row { flex-direction: column; }
+    .hero-stats { gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+  }
+
+  /* ── UTILITY ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+    margin: 1rem 0;
+  }
+
+  .glow-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green-mid), transparent);
+    margin: 4rem 0;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="radial-glow"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">STR//NGT</div>
+  <ul class="nav-links">
+    <li><a href="#">Program</a></li>
+    <li><a href="#">Nutrition</a></li>
+    <li><a href="#">Progress</a></li>
+    <li><a href="#">Community</a></li>
+  </ul>
+  <button class="nav-cta">Start Free</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">AI-Powered Training Protocol</div>
+  <h1 class="hero-title">STRENGTH</h1>
+  <p class="hero-sub">Build Power &amp; <span>Muscle</span></p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">120+</div><div class="stat-label">Exercises</div></div>
+    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Muscle Groups</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">Difficulty Levels</div></div>
+    <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Gainz</div></div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<div class="wrapper">
+  <div class="glow-line"></div>
+
+  <!-- CONTROL PANEL -->
+  <section class="controls-section">
+    <div class="controls-header">
+      <div class="section-label">Training Config</div>
+      <div class="section-title">YOUR PROTOCOL</div>
+    </div>
+    <div class="control-row">
+      <div class="control-group">
+        <div class="control-group-label">↗ Difficulty Level</div>
+        <div class="btn-group" id="level-group">
+          <button class="btn-sel active" data-level="beginner">Beginner</button>
+          <button class="btn-sel" data-level="intermediate">Intermediate</button>
+          <button class="btn-sel" data-level="advanced">Advanced</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="control-group-label">↗ Target Muscle</div>
+        <div class="btn-group" id="muscle-group">
+          <button class="btn-sel active" data-muscle="chest">Chest</button>
+          <button class="btn-sel" data-muscle="back">Back</button>
+          <button class="btn-sel" data-muscle="legs">Legs</button>
+          <button class="btn-sel" data-muscle="arms">Arms</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKOUT CARDS -->
+  <section class="workouts-section">
+    <div class="cards-header">
+      <div>
+        <div class="section-label">Exercise Queue</div>
+        <div class="section-title">TODAY'S WORKOUT</div>
+      </div>
+      <div class="muscle-tag" id="active-muscle-tag">CHEST</div>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </section>
+
+  <div class="glow-line"></div>
+
+  <!-- VIDEO + TIMER -->
+  <section class="video-section">
+    <div class="section-label">Video Guidance</div>
+    <div class="section-title" style="margin-bottom:1.8rem">WATCH & TRAIN</div>
+    <div class="video-layout">
+      <div class="video-wrapper">
+        <iframe id="workout-video" class="video-embed"
+          src="https://www.youtube.com/embed/IODxDxX7oi4"
+          title="Workout Video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+        <div class="video-meta">
+          <div class="video-title" id="video-title">CHEST TRAINING FUNDAMENTALS</div>
+          <div class="video-desc" id="video-desc">Complete chest workout covering push mechanics, muscle activation, and progressive overload principles for maximum hypertrophy.</div>
+        </div>
+      </div>
+
+      <!-- TIMER PANEL -->
+      <div class="timer-panel">
+        <div>
+          <div class="sets-label">Session Timer</div>
+          <div class="timer-display">
+            <div class="timer-time" id="timer-display">00:00</div>
+            <div class="timer-label" id="timer-status">Ready to Begin</div>
+          </div>
+        </div>
+
+        <div class="sets-counter">
+          <div class="sets-label">Set Progress</div>
+          <div class="sets-row" id="sets-row"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="timer-controls">
+          <button class="btn-ctrl primary" id="btn-start" onclick="startTimer()">▶&nbsp; Start Workout</button>
+          <button class="btn-ctrl secondary" id="btn-pause" onclick="pauseTimer()">⏸&nbsp; Pause</button>
+          <button class="btn-ctrl" id="btn-next" onclick="nextSet()">↪&nbsp; Next Set</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="sets-counter">
+          <div class="sets-label" id="current-exercise-label">Current Exercise</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--text);letter-spacing:0.05em;text-align:center" id="current-exercise-name">Select & Start</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div>Built for <span>Elite Athletes</span> · STR//NGT Training System · &copy; 2025</div>
+</footer>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const WORKOUTS = {
+  chest: {
+    beginner: [
+      { name: "Push-Ups", sets: 3, reps: "12", icon: "💪" },
+      { name: "Incline Push-Ups", sets: 3, reps: "15", icon: "🔺" },
+      { name: "Chest Flys", sets: 3, reps: "12", icon: "🦅" },
+      { name: "Dumbbell Press", sets: 3, reps: "10", icon: "🏋️" },
+    ],
+    intermediate: [
+      { name: "Bench Press", sets: 4, reps: "10", icon: "🏋️" },
+      { name: "Cable Crossovers", sets: 3, reps: "12", icon: "✖️" },
+      { name: "Incline DB Press", sets: 4, reps: "10", icon: "🔺" },
+      { name: "Pec Deck Machine", sets: 3, reps: "15", icon: "🦅" },
+      { name: "Dips", sets: 3, reps: "12", icon: "💪" },
+    ],
+    advanced: [
+      { name: "Heavy Bench Press", sets: 5, reps: "5", icon: "🏋️" },
+      { name: "Weighted Dips", sets: 4, reps: "8", icon: "⚡" },
+      { name: "Incline Barbell", sets: 4, reps: "8", icon: "🔺" },
+      { name: "Cable Flys", sets: 3, reps: "15", icon: "✖️" },
+      { name: "Push-Up Burnout", sets: 3, reps: "AMRAP", icon: "🔥" },
+      { name: "Plyometric Push-Ups", sets: 3, reps: "10", icon: "⚡" },
+    ]
+  },
+  back: {
+    beginner: [
+      { name: "Lat Pulldowns", sets: 3, reps: "12", icon: "⬇️" },
+      { name: "Seated Row", sets: 3, reps: "12", icon: "🚣" },
+      { name: "DB Row", sets: 3, reps: "10", icon: "💪" },
+      { name: "Back Extension", sets: 3, reps: "15", icon: "🌊" },
+    ],
+    intermediate: [
+      { name: "Pull-Ups", sets: 4, reps: "8", icon: "🆙" },
+      { name: "Deadlift", sets: 4, reps: "6", icon: "🏋️" },
+      { name: "T-Bar Row", sets: 3, reps: "10", icon: "🔠" },
+      { name: "Wide Pulldown", sets: 3, reps: "12", icon: "⬇️" },
+      { name: "Hyperextensions", sets: 3, reps: "15", icon: "🌊" },
+    ],
+    advanced: [
+      { name: "Weighted Pull-Ups", sets: 5, reps: "6", icon: "🆙" },
+      { name: "Romanian Deadlift", sets: 4, reps: "8", icon: "🏋️" },
+      { name: "Pendlay Row", sets: 4, reps: "6", icon: "🚣" },
+      { name: "Meadows Row", sets: 3, reps: "10", icon: "🌿" },
+      { name: "Face Pulls", sets: 3, reps: "20", icon: "🎯" },
+      { name: "Straight-Arm Pulldown", sets: 3, reps: "15", icon: "⬇️" },
+    ]
+  },
+  legs: {
+    beginner: [
+      { name: "Bodyweight Squats", sets: 3, reps: "15", icon: "🦵" },
+      { name: "Lunges", sets: 3, reps: "12", icon: "👣" },
+      { name: "Leg Press", sets: 3, reps: "12", icon: "🅿️" },
+      { name: "Calf Raises", sets: 3, reps: "20", icon: "🦶" },
+    ],
+    intermediate: [
+      { name: "Barbell Squats", sets: 4, reps: "10", icon: "🏋️" },
+      { name: "Romanian Deadlift", sets: 4, reps: "10", icon: "🦵" },
+      { name: "Leg Extension", sets: 3, reps: "15", icon: "🦿" },
+      { name: "Leg Curl", sets: 3, reps: "15", icon: "🌀" },
+      { name: "Hack Squats", sets: 3, reps: "12", icon: "⬇️" },
+    ],
+    advanced: [
+      { name: "Heavy Squats", sets: 5, reps: "5", icon: "🏋️" },
+      { name: "Bulgarian Split Squat", sets: 4, reps: "8", icon: "⚔️" },
+      { name: "Hip Thrust", sets: 4, reps: "10", icon: "🦵" },
+      { name: "Walking Lunges", sets: 3, reps: "20", icon: "👣" },
+      { name: "Box Jumps", sets: 3, reps: "8", icon: "📦" },
+      { name: "Sissy Squats", sets: 3, reps: "12", icon: "🔥" },
+    ]
+  },
+  arms: {
+    beginner: [
+      { name: "DB Bicep Curls", sets: 3, reps: "12", icon: "💪" },
+      { name: "Tricep Pushdowns", sets: 3, reps: "15", icon: "⬇️" },
+      { name: "Hammer Curls", sets: 3, reps: "12", icon: "🔨" },
+      { name: "Overhead Tricep Ext", sets: 3, reps: "12", icon: "☝️" },
+    ],
+    intermediate: [
+      { name: "EZ-Bar Curls", sets: 4, reps: "10", icon: "〽️" },
+      { name: "Skull Crushers", sets: 4, reps: "10", icon: "💀" },
+      { name: "Preacher Curls", sets: 3, reps: "12", icon: "🙏" },
+      { name: "Close-Grip Bench", sets: 3, reps: "10", icon: "🏋️" },
+      { name: "Cable Curls", sets: 3, reps: "15", icon: "〰️" },
+    ],
+    advanced: [
+      { name: "Barbell Cheat Curls", sets: 4, reps: "8", icon: "💪" },
+      { name: "Weighted Dips", sets: 4, reps: "8", icon: "⬇️" },
+      { name: "Incline DB Curls", sets: 3, reps: "10", icon: "🔺" },
+      { name: "Cable Overhead Ext", sets: 3, reps: "12", icon: "☝️" },
+      { name: "21s Curls", sets: 3, reps: "21", icon: "🎯" },
+      { name: "Tate Press", sets: 3, reps: "12", icon: "🏆" },
+    ]
+  }
+};
+
+const VIDEOS = {
+  chest: {
+    id: "IODxDxX7oi4",
+    title: "CHEST TRAINING FUNDAMENTALS",
+    desc: "Complete chest workout covering push mechanics, muscle activation, and progressive overload for maximum hypertrophy."
+  },
+  back: {
+    id: "eGo4IYlbE5g",
+    title: "BACK & LATS POWER SESSION",
+    desc: "Build a wide, thick back with proper pull mechanics, scapular retraction, and deadlift form."
+  },
+  legs: {
+    id: "ultWZbUMPL8",
+    title: "LEG DAY DOMINATION",
+    desc: "Quad, hamstring, and glute training covering squats, lunges, and isolation work for complete leg development."
+  },
+  arms: {
+    id: "av7-8igZlook",
+    title: "ARM HYPERTROPHY PROTOCOL",
+    desc: "Bicep and tricep training with optimal angles, tempo, and time-under-tension for maximum arm growth."
+  }
+};
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let currentLevel = 'beginner';
+let currentMuscle = 'chest';
+let timerInterval = null;
+let seconds = 0;
+let isRunning = false;
+let currentSet = 0;
+let totalSets = 3;
+
+// ─────────────────────────────────────────────
+// THREE.JS BACKGROUND
+// ─────────────────────────────────────────────
+(function initThree() {
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.z = 4;
+
+  // Icosahedron wireframe
+  const geo = new THREE.IcosahedronGeometry(1.8, 1);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x00ff88,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.55,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+
+  // Inner torus
+  const tGeo = new THREE.TorusGeometry(2.5, 0.006, 8, 80);
+  const tMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.2 });
+  const torus = new THREE.Mesh(tGeo, tMat);
+  torus.rotation.x = Math.PI / 3;
+  scene.add(torus);
+
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', e => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 0.5;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 0.5;
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    mesh.rotation.x += 0.003;
+    mesh.rotation.y += 0.005;
+    torus.rotation.z += 0.002;
+    torus.rotation.x += 0.001;
+    // Subtle mouse tracking
+    mesh.rotation.y += (mouseX - mesh.rotation.y * 0.1) * 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+// ─────────────────────────────────────────────
+// RENDER CARDS
+// ─────────────────────────────────────────────
+function renderCards() {
+  const grid = document.getElementById('cards-grid');
+  const tag = document.getElementById('active-muscle-tag');
+  const exercises = WORKOUTS[currentMuscle][currentLevel];
+
+  tag.textContent = currentMuscle.toUpperCase();
+  grid.innerHTML = '';
+
+  exercises.forEach((ex, i) => {
+    const card = document.createElement('div');
+    card.className = 'exercise-card';
+    card.style.animationDelay = `${i * 0.07}s`;
+    card.innerHTML = `
+      <div class="card-number">0${i + 1}</div>
+      <div class="card-name">${ex.name}</div>
+      <div class="card-details">
+        <div class="card-badge sets">${ex.sets} sets</div>
+        <div class="card-badge">${ex.reps} reps</div>
+      </div>
+      <div class="card-icon">${ex.icon}</div>
+    `;
+    card.addEventListener('click', () => selectExercise(ex));
+    grid.appendChild(card);
+  });
+
+  totalSets = exercises[0]?.sets || 3;
+  renderSets();
+  updateCurrentExercise(exercises[0]);
+}
+
+// ─────────────────────────────────────────────
+// RENDER VIDEO
+// ─────────────────────────────────────────────
+function renderVideo() {
+  const v = VIDEOS[currentMuscle];
+  const iframe = document.getElementById('workout-video');
+  const title = document.getElementById('video-title');
+  const desc = document.getElementById('video-desc');
+  iframe.src = `https://www.youtube.com/embed/${v.id}`;
+  title.textContent = v.title;
+  desc.textContent = v.desc;
+}
+
+// ─────────────────────────────────────────────
+// SETS DOTS
+// ─────────────────────────────────────────────
+function renderSets() {
+  const row = document.getElementById('sets-row');
+  row.innerHTML = '';
+  for (let i = 0; i < totalSets; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'set-dot' +
+      (i < currentSet ? ' done' : i === currentSet && isRunning ? ' active' : '');
+    dot.textContent = i + 1;
+    row.appendChild(dot);
+  }
+}
+
+function selectExercise(ex) {
+  totalSets = ex.sets;
+  currentSet = 0;
+  renderSets();
+  updateCurrentExercise(ex);
+  // Highlight card
+  document.querySelectorAll('.exercise-card').forEach(c => {
+    c.style.boxShadow = '';
+    c.style.borderColor = '';
+  });
+}
+
+function updateCurrentExercise(ex) {
+  if (!ex) return;
+  document.getElementById('current-exercise-name').textContent = ex.name;
+}
+
+// ─────────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────────
+function formatTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = (s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function startTimer() {
+  if (isRunning) return;
+  isRunning = true;
+  document.getElementById('timer-status').textContent = `Set ${currentSet + 1} / ${totalSets} — In Progress`;
+  renderSets();
+  timerInterval = setInterval(() => {
+    seconds++;
+    document.getElementById('timer-display').textContent = formatTime(seconds);
+  }, 1000);
+}
+
+function pauseTimer() {
+  if (!isRunning) return;
+  isRunning = false;
+  clearInterval(timerInterval);
+  document.getElementById('timer-status').textContent = 'Paused — Rest Up';
+  renderSets();
+}
+
+function nextSet() {
+  if (currentSet < totalSets - 1) {
+    currentSet++;
+    seconds = 0;
+    isRunning = false;
+    clearInterval(timerInterval);
+    document.getElementById('timer-display').textContent = '00:00';
+    document.getElementById('timer-status').textContent = `Set ${currentSet + 1} of ${totalSets} — Ready`;
+    renderSets();
+  } else {
+    // Workout complete
+    clearInterval(timerInterval);
+    isRunning = false;
+    document.getElementById('timer-status').textContent = '✓ Workout Complete!';
+    document.getElementById('timer-display').textContent = formatTime(seconds);
+    currentSet = 0;
+    renderSets();
+  }
+}
+
+// ─────────────────────────────────────────────
+// BUTTON GROUPS
+// ─────────────────────────────────────────────
+document.getElementById('level-group').addEventListener('click', e => {
+  if (!e.target.dataset.level) return;
+  document.querySelectorAll('#level-group .btn-sel').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  currentLevel = e.target.dataset.level;
+  currentSet = 0; seconds = 0; isRunning = false; clearInterval(timerInterval);
+  document.getElementById('timer-display').textContent = '00:00';
+  document.getElementById('timer-status').textContent = 'Ready to Begin';
+  renderCards();
+});
+
+document.getElementById('muscle-group').addEventListener('click', e => {
+  if (!e.target.dataset.muscle) return;
+  document.querySelectorAll('#muscle-group .btn-sel').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  currentMuscle = e.target.dataset.muscle;
+  currentSet = 0; seconds = 0; isRunning = false; clearInterval(timerInterval);
+  document.getElementById('timer-display').textContent = '00:00';
+  document.getElementById('timer-status').textContent = 'Ready to Begin';
+  renderCards();
+  renderVideo();
+});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+renderCards();
+renderVideo();
+</script>
+</body>
+</html>
